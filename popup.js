@@ -19,9 +19,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('openOptions').textContent = t.options;
         document.getElementById('searchInput').placeholder = t.extractPlaceholder;
         document.getElementById('label-cross').textContent = t.crossWindow;
-        document.getElementById('groupHintText').textContent = t.groupHint;
         document.getElementById('extractHintText').textContent = t.extractHint;
         document.getElementById('extractBtn').title = t.extractTooltip;
+        document.getElementById('label-undo').textContent = t.undo;
+        document.getElementById('undoBtn').title = t.undo;
+        document.getElementById('label-ungroup').textContent = t.ungroup;
+        document.getElementById('ungroupBtn').title = t.ungroup;
 
         const strategySelect = document.getElementById('strategySelect');
         const strategyMenu = document.getElementById('strategyMenu');
@@ -86,6 +89,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const strategySelect = document.getElementById('strategySelect');
     const strategyToggle = document.getElementById('strategyToggle');
     const strategyMenu = document.getElementById('strategyMenu');
+    const undoBtn = document.getElementById('undoBtn');
+    const ungroupBtn = document.getElementById('ungroupBtn');
 
     // 切换菜单显示
     strategyToggle.addEventListener('click', (e) => {
@@ -96,6 +101,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 点击外部关闭菜单
     document.addEventListener('click', () => {
         strategyMenu.classList.remove('show');
+    });
+
+    undoBtn.addEventListener('click', () => {
+        chrome.runtime.sendMessage({ action: "undo" }, (response) => {
+            chrome.storage.sync.get(DEFAULT_SETTINGS, (settings) => {
+                const t = POPUP_TRANSLATIONS[settings.language] || POPUP_TRANSLATIONS.en;
+                if (response && response.success) {
+                    status.textContent = t.success;
+                    status.className = 'success';
+                } else if (response && response.error === "no_history") {
+                    status.textContent = t.noUndo || "No undo history";
+                    status.className = 'error';
+                } else {
+                    status.textContent = t.error;
+                    status.className = 'error';
+                }
+            });
+        });
+    });
+
+    ungroupBtn.addEventListener('click', () => {
+        chrome.storage.sync.get(DEFAULT_SETTINGS, (settings) => {
+            const t = POPUP_TRANSLATIONS[settings.language] || POPUP_TRANSLATIONS.en;
+            if (confirm(t.ungroupConfirm)) {
+                chrome.runtime.sendMessage({ action: "ungroupAll" }, (response) => {
+                    if (response && response.success) {
+                        status.textContent = t.success;
+                        status.className = 'success';
+                    } else {
+                        status.textContent = t.error;
+                        status.className = 'error';
+                    }
+                });
+            }
+        });
     });
 
     // 初始化勾选框状态
@@ -134,7 +174,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 status.textContent = t.success;
                 status.className = 'success';
             } else {
-                status.textContent = (response && response.error) || t.error;
+                console.error("Organize Error:", response?.error);
+                status.textContent = response?.error ? `${t.error} (${response.error})` : t.error;
                 status.className = 'error';
             }
         });
@@ -186,6 +227,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 })
             });
 
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API Error: ${response.status} - ${errorText}`);
+            }
+
             const data = await response.json();
             const aiContent = data.choices[0].message.content;
             
@@ -203,6 +249,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // 确保 ID 是有效的（有些模型可能返回字符串 ID）
                 const validIds = matchedIds.map(id => parseInt(id)).filter(id => !isNaN(id));
                 
+                // 记录操作前的状态用于撤销
+                const originalTabs = await chrome.tabs.query(queryInfo);
+                const historyData = {
+                    type: 'extract',
+                    data: originalTabs.filter(t => validIds.includes(t.id)).map(t => ({ id: t.id, windowId: t.windowId, index: t.index, groupId: t.groupId }))
+                };
+
                 // 创建新窗口并将第一个匹配的标签页移动进去
                 const newWindow = await chrome.windows.create({ tabId: validIds[0] });
                 
@@ -211,6 +264,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     await chrome.tabs.move(validIds.slice(1), { windowId: newWindow.id, index: -1 });
                 }
                 
+                // 保存到后台历史中
+                historyData.newWindowId = newWindow.id;
+                chrome.runtime.sendMessage({ action: "saveUndoHistory", historyData });
+
                 status.textContent = `${t.extractSuccess}: ${validIds.length}`;
                 status.className = 'success';
             } else {
@@ -219,7 +276,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (err) {
             console.error(err);
-            status.textContent = t.error;
+            status.textContent = `${t.error} (${err.message})`;
             status.className = 'error';
         } finally {
             extractBtn.disabled = false;

@@ -4,8 +4,101 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "organizeTabs") {
         organizeTabsAction(request.customPrompt).then(sendResponse);
         return true; // 保持异步
+    } else if (request.action === "undo") {
+        undoLastAction().then(sendResponse);
+        return true;
+    } else if (request.action === "saveUndoHistory") {
+        saveToHistory(request.historyData).then(sendResponse);
+        return true;
+    } else if (request.action === "ungroupAll") {
+        ungroupAllTabs().then(sendResponse);
+        return true;
     }
 });
+
+let undoHistory = [];
+
+async function ungroupAllTabs() {
+    try {
+        // 固定在仅解绑当前活动窗口中的标签页组
+        const queryInfo = { currentWindow: true, windowType: 'normal' };
+        
+        const tabs = await chrome.tabs.query(queryInfo);
+        const tabIds = tabs.map(t => t.id);
+        if (tabIds.length > 0) {
+            await chrome.tabs.ungroup(tabIds).catch(() => {});
+        }
+        return { success: true };
+    } catch (error) {
+        console.error("Ungroup All failed:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function saveToHistory(historyData) {
+    undoHistory = [historyData]; // 仅保留当前最新的一步
+    return { success: true };
+}
+
+async function undoLastAction() {
+    if (undoHistory.length === 0) {
+        return { success: false, error: "no_history" };
+    }
+
+    const lastAction = undoHistory.pop();
+    try {
+        if (lastAction.type === 'groups') {
+            // 记录哪些 tab 需要被移动回哪些组
+            const groupsToRestore = {};
+
+            for (const item of lastAction.data) {
+                const tab = await chrome.tabs.get(item.id).catch(() => null);
+                if (tab) {
+                    // 1. 移出当前可能存在的组（因为我们要恢复到旧的状态）
+                    await chrome.tabs.ungroup(item.id).catch(() => {});
+                    
+                    // 2. 移动回到原来的窗口和索引
+                    await chrome.tabs.move(item.id, { windowId: item.windowId, index: item.index });
+                    
+                    // 3. 收集原有的分组信息
+                    if (item.groupId !== -1) {
+                        if (!groupsToRestore[item.groupId]) {
+                            groupsToRestore[item.groupId] = [];
+                        }
+                        groupsToRestore[item.groupId].push(item.id);
+                    }
+                }
+            }
+
+            // 4. 恢复原有的分组结构
+            for (const oldGroupId in groupsToRestore) {
+                const tabIds = groupsToRestore[oldGroupId];
+                // 重新创建组并尝试恢复原名和颜色
+                const newGroupId = await chrome.tabs.group({ tabIds: tabIds }).catch(() => null);
+                if (newGroupId && lastAction.groupsInfo[oldGroupId]) {
+                    const info = lastAction.groupsInfo[oldGroupId];
+                    await chrome.tabGroups.update(newGroupId, { title: info.title, color: info.color });
+                }
+            }
+        } else if (lastAction.type === 'extract') {
+            // 撤销提取：将标签页移回原窗口，并关闭新创建的窗口
+            for (const item of lastAction.data) {
+                const tab = await chrome.tabs.get(item.id).catch(() => null);
+                if (tab) {
+                    await chrome.tabs.move(item.id, { windowId: item.windowId, index: item.index });
+                }
+            }
+            // 关闭新窗口
+            if (lastAction.newWindowId) {
+                await chrome.windows.remove(lastAction.newWindowId).catch(() => {});
+            }
+        }
+        return { success: true };
+    } catch (error) {
+        console.error("Undo failed:", error);
+        return { success: false, error: error.message };
+    }
+}
 
 async function organizeTabsAction(customPrompt) {
     try {
@@ -27,6 +120,25 @@ async function organizeTabsAction(customPrompt) {
             : { currentWindow: true, windowType: 'normal' };
         const tabs = await chrome.tabs.query(queryInfo);
         
+        // 记录操作前的状态用于撤销，包括组名信息
+        const groupsInfo = {};
+        const tabList = await Promise.all(tabs.map(async t => {
+            const tabData = { id: t.id, windowId: t.windowId, index: t.index, groupId: t.groupId };
+            if (t.groupId !== -1 && !groupsInfo[t.groupId]) {
+                const group = await chrome.tabGroups.get(t.groupId).catch(() => null);
+                if (group) {
+                    groupsInfo[t.groupId] = { title: group.title, color: group.color };
+                }
+            }
+            return tabData;
+        }));
+
+        const historyData = {
+            type: 'groups',
+            data: tabList,
+            groupsInfo: groupsInfo
+        };
+
         // 增强 tabData 的结构，并对 URL 进行解码以让 AI 识别中文路径
         const tabData = tabs.map(t => {
             let decodedUrl = t.url;
@@ -73,6 +185,11 @@ async function organizeTabsAction(customPrompt) {
             })
         });
 
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`API Error: ${response.status} - ${errorText}`);
+        }
+
         const data = await response.json();
         
         if (settings.debugMode) {
@@ -88,6 +205,10 @@ async function organizeTabsAction(customPrompt) {
         
         // 兼容某些模型可能返回的对象包裹情况
         const groups = Array.isArray(result) ? result : (result.groups || []);
+
+        if (groups.length > 0) {
+            await saveToHistory(historyData);
+        }
 
         for (const group of groups) {
             if (group.tabIds && group.tabIds.length > 0) {
@@ -130,7 +251,7 @@ async function organizeTabsAction(customPrompt) {
 
         return { success: true };
     } catch (error) {
-        console.error(error);
+        console.error("Organize Error:", error);
         return { success: false, error: error.message };
     }
 }

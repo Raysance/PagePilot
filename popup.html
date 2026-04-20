@@ -190,17 +190,31 @@
         .loading { color: #2563eb; }
         
         .footer {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-top: 4px;
+            padding: 0 4px;
         }
-        .footer a {
+        .footer a, .footer button {
             color: #94a3b8;
             text-decoration: none;
             font-size: 11px;
             font-weight: 500;
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
-        .footer a:hover {
+        .footer a:hover, .footer button:hover {
             color: #64748b;
+        }
+        .footer button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -255,6 +269,21 @@
         <div id="status"></div>
 
         <div class="footer">
+            <div style="display: flex; gap: 12px;">
+                <button id="undoBtn" title="撤销上次操作">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 7v6h6"></path>
+                        <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path>
+                    </svg>
+                    <span id="label-undo">撤销</span>
+                </button>
+                <button id="ungroupBtn" title="解绑所有标签页分组">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12H3m0 0l4-4m-4 4l4 4"></path>
+                    </svg>
+                    <span id="label-ungroup">解绑</span>
+                </button>
+            </div>
             <a href="#" id="openOptions">⚙️ 设置</a>
         </div>
     </div>

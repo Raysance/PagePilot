@@ -139,7 +139,12 @@ export const TRANSLATIONS = {
         testSuccess: "连接成功！",
         testError: "连接失败: ",
         labelDebug: "调试模式 (在控制台输出日志)",
-        labelCrossWindow: "支持跨窗口整理 (Experimental)"
+        labelCrossWindow: "支持跨窗口整理 (Experimental)",
+        undoBtn: "撤销上次操作",
+        undoSuccess: "已撤销！",
+        undoError: "撤销失败或没有可执行的撤销",
+        noUndo: "没有可撤销的操作",
+        ungroupAll: "解绑所有组"
     },
     en: {
         title: "PagePilot Options",
@@ -158,7 +163,12 @@ export const TRANSLATIONS = {
         testSuccess: "Connection successful!",
         testError: "Connection failed: ",
         labelDebug: "Enable Debug Mode (Log to console)",
-        labelCrossWindow: "Support cross-window organization (Experimental)"
+        labelCrossWindow: "Support cross-window organization (Experimental)",
+        undoBtn: "Undo last action",
+        undoSuccess: "Undo successful!",
+        undoError: "Undo failed or no undo available",
+        noUndo: "No undo history",
+        ungroupAll: "Ungroup All Labels"
     }
 };
 
@@ -181,7 +191,10 @@ export const POPUP_TRANSLATIONS = {
         groupHint: "分析页面内容并自动分组",
         apiKeyError: "请先配置 API Key",
         extractTooltip: "将匹配项移至新窗口",
-        optCurrent: "使用当前设置的分组策略"
+        optCurrent: "使用当前设置的分组策略",
+        undo: "撤销",
+        ungroup: "解绑",
+        ungroupConfirm: "确定要解绑当前窗口的所有标签页分组吗？"
     },
     en: {
         appName: "PagePilot",
@@ -201,6 +214,9 @@ export const POPUP_TRANSLATIONS = {
         groupHint: "Analyze content and organizes tabs into groups",
         apiKeyError: "Please configure API Key",
         extractTooltip: "Move matches to new window",
-        optCurrent: "Use saved grouping strategy"
+        optCurrent: "Use saved grouping strategy",
+        undo: "Undo",
+        ungroup: "Ungroup",
+        ungroupConfirm: "Are you sure you want to ungroup all tabs in the current window?"
     }
 };
