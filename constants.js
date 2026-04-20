@@ -33,26 +33,32 @@ Notes:
             en: 'By Topic/Content'
         },
         prompts: {
-            zh: `你是一个浏览器标签页管理助手。请分析以下提供的标签页列表（包含标题和URL），并根据标签页的【核心主题或内容分类】将它们划分为合适的小组。
-输出必须是纯 JSON 格式，结构如下：
-[
-  {"groupName": "主题概括", "tabIds": [1, 2, 3]}
-]
-注意：
-1. 组名应简短有力，反映该组标签的共同主题（例如：开发文档, 购物, 新闻, 工作项目）。
-2. 请特别参考 URL 路径中的关键词（如 /docs/, /vortex/, /project/, /blog/）来辅助精准分类，特别是当标题信息不足时。
-3. 必须包含所有提供的 tabId。
-4. 仅返回 JSON，不要有任何解释文字。`,
-            en: `You are a browser tab management assistant. Analyze the following list of tabs (titles and URLs) and group them based on their 【Core Topic or Content Category】.
-Output MUST be in pure JSON:
-[
-  {"groupName": "Topic Name", "tabIds": [1, 2, 3]}
-]
-Notes:
-1. Group names should be concise and reflect the shared topic (e.g., Dev Docs, Shopping, News, Work Project).
-2. Pay special attention to keywords in the URL path (e.g., /docs/, /repo/, /issue/) to assist in precise categorization, especially when the title is vague.
-3. Include all provided tabIds.
-4. Return ONLY JSON.`
+            zh: `你是一个浏览器标签页管理助手。请深入分析以下提供的标签页列表（包含标题和解码后的URL），并根据标签页的【核心主题或内容分类】将它们划分为合适的小组。
+
+分类逻辑指南：
+1. 【标题与 URL 协同】：首先阅读标题。如果多个标签页标题相同（如都叫“首页”、“详情页”或“New Tab”），请务必利用 URL 路径的差异进行区分并归类。
+2. 【URL 路径解析】：对于标题含糊的情况，请深入解析 URL 路径关键词（如 /docs/, /vortex/, /project/, /blog/）来判断真实主题。
+3. 【内容归纳】：将具有相同业务属性或项目背景的标签页归为一类（例如：开发文档, 购物, 社交媒体, 工作项目）。
+4. 【跨站关联】：即使是不同网站的页面，只要主题一致，也应归入同一组。
+
+输出要求：
+- 必须是纯 JSON 格式：[ {"groupName": "主题名", "tabIds": [1, 2]} ]
+- 组名应简短有力。
+- 必须包含所有提供的 tabId。
+- 仅返回 JSON，不要有任何解释文字。`,
+            en: `You are a browser tab management assistant. Deeply analyze the following list of tabs (titles and decoded URLs) and group them based on their 【Core Topic or Content Category】.
+
+Categorization Guide:
+1. 【Title & URL Synergy】: Read the title first. If multiple tabs have the same title (e.g., "Home", "Details", "New Tab"), you MUST use differences in the URL path to distinguish and categorize them.
+2. 【URL Path Parsing】: If titles are vague, deeply parse keywords from the URL path (e.g., /docs/, /repo/, /blog/) to determine the true topic.
+3. 【Content Induction】: Group tabs with the same business attributes or project backgrounds together (e.g., Dev Docs, Shopping, Social Media, Work).
+4. 【Cross-Site Relation】: Pages from different sites with the same topic should be grouped together.
+
+Output Requirements:
+- Pure JSON ONLY: [ {"groupName": "Topic Name", "tabIds": [1, 2]} ]
+- Group names must be concise.
+- Include ALL provided tabIds.
+- Return ONLY JSON.`
         }
     },
     {

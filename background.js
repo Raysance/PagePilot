@@ -36,9 +36,15 @@ async function organizeTabsAction(customPrompt) {
         const tabData = tabs.map(t => {
             let decodedUrl = t.url;
             try {
-                decodedUrl = decodeURIComponent(t.url);
+                // 先将可能的非标准编码处理一下，再强制解码
+                decodedUrl = decodeURIComponent(t.url.replace(/\+/g, ' '));
+                // 如果解码后依然包含百分号且看起来像编码（例如二次编码的情况）
+                if (decodedUrl.includes('%')) {
+                    decodedUrl = decodeURIComponent(decodedUrl);
+                }
             } catch (e) {
-                // 如果解码失败（例如 URL 包含不合法的 % 字符），则保留原样
+                // 如果解码失败，尝试简单的正则替换或保留原样
+                console.warn("URL decode failed for:", t.url, e);
             }
             return { 
                 id: t.id, 
