@@ -133,7 +133,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (response && response.success) {
                 status.textContent = t.success;
                 status.className = 'success';
-                setTimeout(() => { window.close(); }, 1500);
             } else {
                 status.textContent = (response && response.error) || t.error;
                 status.className = 'error';
