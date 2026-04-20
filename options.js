@@ -5,9 +5,8 @@ const defaultPrompt = `你是一个浏览器标签页管理助手。请分析以
 ]
 注意：
 1. 组名应简短有力。
-2. 语言应遵循用户的设置（中文或英文）。
-3. 必须包含所有提供的 tabId。
-4. 仅返回 JSON，不要有任何解释文字。`;
+2. 必须包含所有提供的 tabId。
+3. 仅返回 JSON，不要有任何解释文字。`;
 
 const defaultPromptEn = `You are a browser tab management assistant. Analyze the following list of tabs (including titles and URLs) and group them based on content relevance.
 The output MUST be in pure JSON format with the following structure:
@@ -16,9 +15,8 @@ The output MUST be in pure JSON format with the following structure:
 ]
 Notes:
 1. Group names should be concise.
-2. Language should follow the user's setting (Chinese or English).
-3. Include all provided tabIds.
-4. Return ONLY JSON, no explanatory text.`;
+2. Include all provided tabIds.
+3. Return ONLY JSON, no explanatory text.`;
 
 const translations = {
     zh: {
@@ -32,7 +30,8 @@ const translations = {
         testBtn: "测试连接",
         testing: "正在测试...",
         testSuccess: "连接成功！",
-        testError: "连接失败: "
+        testError: "连接失败: ",
+        labelDebug: "开启调试模式 (在控制台输出日志)"
     },
     en: {
         title: "PagePilot Options",
@@ -45,7 +44,8 @@ const translations = {
         testBtn: "Test Connection",
         testing: "Testing...",
         testSuccess: "Connection successful!",
-        testError: "Connection failed: "
+        testError: "Connection failed: ",
+        labelDebug: "Enable Debug Mode (Log to console)"
     }
 };
 
@@ -58,6 +58,7 @@ function updateUI(lang) {
     document.getElementById('save').textContent = t.save;
     document.getElementById('reset').textContent = t.reset;
     document.getElementById('testApiKey').title = t.testBtn;
+    document.getElementById('label-debug').textContent = t.labelDebug;
 }
 
 // 测试 API Key
@@ -118,7 +119,8 @@ function loadOptions() {
     chrome.storage.sync.get({
         language: 'zh',
         apiKey: '',
-        prompt: defaultPrompt
+        prompt: defaultPrompt,
+        debugMode: false
     }, (items) => {
         document.getElementById('language').value = items.language;
         // 如果已有 API Key，显示掩码占位符
@@ -126,6 +128,7 @@ function loadOptions() {
             document.getElementById('apiKey').placeholder = "••••••••••••••••";
         }
         document.getElementById('prompt').value = items.prompt;
+        document.getElementById('debugMode').checked = items.debugMode;
         updateUI(items.language);
     });
 }
@@ -135,10 +138,12 @@ document.getElementById('save').addEventListener('click', () => {
     const language = document.getElementById('language').value;
     const apiKeyInput = document.getElementById('apiKey').value;
     const prompt = document.getElementById('prompt').value;
+    const debugMode = document.getElementById('debugMode').checked;
 
     const dataToSave = {
         language,
-        prompt
+        prompt,
+        debugMode
     };
 
     // 只有当用户输入了新内容时才更新 apiKey
@@ -162,12 +167,23 @@ document.getElementById('save').addEventListener('click', () => {
 // 重置 Prompt
 document.getElementById('reset').addEventListener('click', () => {
     const lang = document.getElementById('language').value;
-    document.getElementById('prompt').value = (lang === 'zh' ? defaultPrompt : defaultPromptEn);
+    const newPrompt = (lang === 'zh' ? defaultPrompt : defaultPromptEn);
+    document.getElementById('prompt').value = newPrompt;
 });
 
 // 切换语言时预览
 document.getElementById('language').addEventListener('change', (e) => {
-    updateUI(e.target.value);
+    const lang = e.target.value;
+    updateUI(lang);
+    
+    // 同时也更新 Prompt 框中的内容，以便用户保存后生效
+    const promptField = document.getElementById('prompt');
+    const isDefaultPrompt = promptField.value === defaultPrompt || promptField.value === defaultPromptEn;
+    if (isDefaultPrompt) {
+        promptField.value = (lang === 'zh' ? defaultPrompt : defaultPromptEn);
+    }
 });
 
 document.addEventListener('DOMContentLoaded', loadOptions);
+// 界面语言加载
+updateUI();

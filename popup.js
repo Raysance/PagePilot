@@ -42,35 +42,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const optionsLink = document.getElementById('openOptions');
 
     btn.addEventListener('click', async () => {
+        const settings = await chrome.storage.sync.get({ language: 'zh' });
+        const lang = settings.language;
+        const t = translations[lang];
+
         btn.disabled = true;
         status.textContent = t.loading;
         status.className = 'loading';
 
-        try {
-            chrome.runtime.sendMessage({ action: "organizeTabs" }, (response) => {
-                // 检查 chrome.runtime.lastError 处理异常断开
-                if (chrome.runtime.lastError) {
-                    btn.disabled = false;
-                    status.textContent = t.error + ": " + chrome.runtime.lastError.message;
-                    status.className = 'error';
-                    return;
-                }
-
-                btn.disabled = false;
-                if (response && response.success) {
-                    status.textContent = t.success;
-                    status.className = 'success';
-                    setTimeout(() => { window.close(); }, 1500);
-                } else {
-                    status.textContent = (response && response.error) || t.error;
-                    status.className = 'error';
-                }
-            });
-        } catch (e) {
+        chrome.runtime.sendMessage({ action: "organizeTabs" }, (response) => {
             btn.disabled = false;
-            status.textContent = t.error;
-            status.className = 'error';
-        }
+            if (response && response.success) {
+                status.textContent = t.success;
+                status.className = 'success';
+                setTimeout(() => { window.close(); }, 1500);
+            } else {
+                status.textContent = (response && response.error) || t.error;
+                status.className = 'error';
+            }
+        });
     });
 
     optionsLink.addEventListener('click', (e) => {

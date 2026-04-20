@@ -10,70 +10,62 @@ async function organizeTabsAction() {
         const settings = await chrome.storage.sync.get({
             apiKey: '',
             prompt: '',
-            language: 'zh'
+            language: 'zh',
+            debugMode: false
         });
 
         if (!settings.apiKey) {
             return { success: false, error: settings.language === 'zh' ? "请先在设置中配置 API Key" : "Please configure API Key in options first" };
         }
 
-        const tabs = await chrome.tabs.query({ currentWindow: true });
+        const tabs = await chrome.tabs.query({ currentWindow: true, windowType: 'normal' });
         const tabData = tabs.map(t => ({ id: t.id, title: t.title, url: t.url }));
+
+        if (settings.debugMode) {
+            console.log("--- DeepSeek API Request Debug ---");
+            console.log("Target Language:", settings.language);
+            console.log("System Prompt:", settings.prompt);
+            console.log("Tabs Data (User Message):", tabData);
+            console.log("----------------------------------");
+        }
 
         const response = await fetch("https://api.deepseek.com/chat/completions", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${settings.apiKey}`,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${settings.apiKey}`
             },
             body: JSON.stringify({
                 model: "deepseek-chat",
                 messages: [
                     { role: "system", content: settings.prompt },
                     { role: "user", content: JSON.stringify(tabData) }
-                ]
+                ],
+                response_format: { type: "json_object" }
             })
         });
 
-        if (!response.ok) {
-            const errBody = await response.json().catch(() => ({}));
-            throw new Error(errBody.error?.message || `API Error: ${response.status}`);
-        }
-
         const data = await response.json();
-        let content = data.choices[0].message.content;
         
-        // 1. 清洗可能存在的 Markdown 代码块标签
-        content = content.replace(/```json\s?|```/g, '').trim();
-
-        let result;
-        try {
-            result = JSON.parse(content);
-        } catch (e) {
-            return { success: false, error: settings.language === 'zh' ? "Json 格式解析错误，请检查 Prompt" : "Received an invalid JSON format, please check Prompt" };
+        if (settings.debugMode) {
+            console.log("--- DeepSeek API Response Debug ---");
+            console.log("Full API Response:", data);
+            const aiMessageContent = data.choices[0].message.content;
+            console.log("AI Content:", aiMessageContent);
+            console.log("-----------------------------------");
         }
+
+        const aiMessageContent = data.choices[0].message.content;
+        const result = JSON.parse(aiMessageContent);
         
-        // 2. 严格的结构化检验
+        // 兼容某些模型可能返回的对象包裹情况
         const groups = Array.isArray(result) ? result : (result.groups || []);
-        if (!Array.isArray(groups) || groups.length === 0) {
-            return { success: false, error: settings.language === 'zh' ? "标签分组无效" : "Failed to generate valid tab groups" };
-        }
 
-        // 3. 过滤并执行分组
-        let processedCount = 0;
         for (const group of groups) {
-            const tabIds = group.tabIds || group.tabID || group.ids; // 容错处理常用同义词
-            const name = group.groupName || group.name || group.title;
-
-            if (Array.isArray(tabIds) && tabIds.length > 0 && name) {
-                const groupId = await chrome.tabs.group({ tabIds: tabIds.filter(id => typeof id === 'number') });
-                await chrome.tabGroups.update(groupId, { title: name });
-                processedCount++;
+            if (group.tabIds && group.tabIds.length > 0) {
+                const groupId = await chrome.tabs.group({ tabIds: group.tabIds });
+                await chrome.tabGroups.update(groupId, { title: group.groupName });
             }
-        }
-
-        if (processedCount === 0) {
-            return { success: false, error: settings.language === 'zh' ? "数据格式无效" : "Invalid data structure" };
         }
 
         return { success: true };
