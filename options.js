@@ -1,6 +1,6 @@
-import { STRATEGIES, TRANSLATIONS, API_CONFIG, DEFAULT_SETTINGS } from './constants.js';
+import { STRATEGIES, TRANSLATIONS, API_PROVIDERS, DEFAULT_SETTINGS } from './constants.js';
 
-function updateUI(lang, strategy = 'domain') {
+function updateUI(lang, strategy = 'domain', providerId = 'deepseek') {
     const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
     document.getElementById('title').textContent = t.title;
     document.getElementById('section-api-lang').textContent = t.sectionApiLang;
@@ -8,8 +8,9 @@ function updateUI(lang, strategy = 'domain') {
     document.getElementById('label-lang').textContent = t.labelLang;
     document.getElementById('label-strategy').textContent = t.labelStrategy;
     
+    // 更新策略选择
     const strategySelect = document.getElementById('strategy');
-    const currentVal = strategySelect.value || strategy;
+    const currentStrategyVal = strategySelect.value || strategy;
     strategySelect.innerHTML = '';
     STRATEGIES.forEach(s => {
         const opt = document.createElement('option');
@@ -17,16 +18,42 @@ function updateUI(lang, strategy = 'domain') {
         opt.textContent = s.name[lang] || s.name.en;
         strategySelect.appendChild(opt);
     });
-    strategySelect.value = currentVal;
+    strategySelect.value = currentStrategyVal;
 
+    // 更新 API 提供商选择
+    const providerSelect = document.getElementById('apiProvider');
+    const currentProviderVal = providerSelect.value || providerId;
+    providerSelect.innerHTML = '';
+    API_PROVIDERS.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        providerSelect.appendChild(opt);
+    });
+    providerSelect.value = currentProviderVal;
+
+    document.getElementById('label-apiProvider').textContent = t.labelApiProvider;
     document.getElementById('label-apiKey').textContent = t.labelApiKey;
+    document.getElementById('label-customUrl').textContent = t.labelCustomUrl;
+    document.getElementById('label-customModel').textContent = t.labelCustomModel;
     document.getElementById('hint-prompt').textContent = t.hintPrompt;
     document.getElementById('label-prompt').textContent = t.labelPrompt;
     document.getElementById('save').textContent = t.save;
     document.getElementById('reset').title = t.reset;
     document.getElementById('testApiKey').title = t.testBtn;
     document.getElementById('label-debug').textContent = t.labelDebug;
+
+    toggleCustomFields(providerSelect.value);
 }
+
+function toggleCustomFields(providerId) {
+    const customFields = document.getElementById('custom-api-fields');
+    customFields.style.display = providerId === 'custom' ? 'block' : 'none';
+}
+
+document.getElementById('apiProvider').addEventListener('change', (e) => {
+    toggleCustomFields(e.target.value);
+});
 
 function getPrompt(lang, strategyId) {
     const strategy = STRATEGIES.find(s => s.id === strategyId) || STRATEGIES[0];
@@ -64,17 +91,24 @@ document.getElementById('testApiKey').addEventListener('click', async () => {
     testStatus.style.display = 'none';
 
     try {
-        const response = await fetch(API_CONFIG.URL, {
+        const providerId = document.getElementById('apiProvider').value;
+        const provider = API_PROVIDERS.find(p => p.id === providerId) || API_PROVIDERS[0];
+        const apiUrl = providerId === 'custom' ? document.getElementById('customUrl').value : provider.url;
+        const apiModel = providerId === 'custom' ? document.getElementById('customModel').value : provider.model;
+
+        const requestBody = {
+            model: apiModel,
+            messages: [{ role: "user", content: "hi" }],
+            max_tokens: 5
+        };
+
+        const response = await fetch(apiUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${keyToTest}`
             },
-            body: JSON.stringify({
-                model: API_CONFIG.MODEL,
-                messages: [{ role: "user", content: "hi" }],
-                max_tokens: 5
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (response.ok) {
@@ -103,6 +137,10 @@ function loadOptions() {
     chrome.storage.sync.get(DEFAULT_SETTINGS, (items) => {
         document.getElementById('language').value = items.language;
         document.getElementById('strategy').value = items.strategy;
+        document.getElementById('apiProvider').value = items.apiProvider;
+        document.getElementById('customUrl').value = items.customUrl;
+        document.getElementById('customModel').value = items.customModel;
+        
         // 如果已有 API Key，显示掩码占位符
         if (items.apiKey) {
             document.getElementById('apiKey').placeholder = "••••••••••••••••";
@@ -113,7 +151,7 @@ function loadOptions() {
         document.getElementById('prompt').value = currentPrompt;
         
         document.getElementById('debugMode').checked = items.debugMode;
-        updateUI(items.language, items.strategy);
+        updateUI(items.language, items.strategy, items.apiProvider);
     });
 }
 
@@ -121,13 +159,19 @@ function loadOptions() {
 document.getElementById('save').addEventListener('click', () => {
     const language = document.getElementById('language').value;
     const strategy = document.getElementById('strategy').value;
+    const apiProvider = document.getElementById('apiProvider').value;
     const apiKeyInput = document.getElementById('apiKey').value;
+    const customUrl = document.getElementById('customUrl').value;
+    const customModel = document.getElementById('customModel').value;
     const prompt = document.getElementById('prompt').value;
     const debugMode = document.getElementById('debugMode').checked;
 
     const dataToSave = {
         language,
         strategy,
+        apiProvider,
+        customUrl,
+        customModel,
         prompt,
         debugMode
     };
@@ -138,7 +182,7 @@ document.getElementById('save').addEventListener('click', () => {
     }
 
     chrome.storage.sync.set(dataToSave, () => {
-        updateUI(language, strategy);
+        updateUI(language, strategy, apiProvider);
         if (apiKeyInput) {
             document.getElementById('apiKey').value = '';
             document.getElementById('apiKey').placeholder = "••••••••••••••••";

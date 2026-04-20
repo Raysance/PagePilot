@@ -1,4 +1,4 @@
-import { API_CONFIG, DEFAULT_SETTINGS } from './constants.js';
+import { API_PROVIDERS, DEFAULT_SETTINGS } from './constants.js';
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "organizeTabs") {
@@ -162,27 +162,38 @@ async function organizeTabsAction(customPrompt) {
         });
 
         if (settings.debugMode) {
-            console.log("--- DeepSeek API Request Debug ---");
+            console.log("--- API Request Debug ---");
+            console.log("Provider:", settings.apiProvider);
             console.log("Target Language:", settings.language);
             console.log("System Prompt:", finalPrompt);
             console.log("Tabs Data (User Message):", tabData);
             console.log("----------------------------------");
         }
 
-        const response = await fetch(API_CONFIG.URL, {
+        const provider = API_PROVIDERS.find(p => p.id === settings.apiProvider) || API_PROVIDERS[0];
+        const apiUrl = provider.id === 'custom' ? settings.customUrl : provider.url;
+        const apiModel = provider.id === 'custom' ? settings.customModel : provider.model;
+
+        const requestBody = {
+            model: apiModel,
+            messages: [
+                { role: "system", content: finalPrompt },
+                { role: "user", content: JSON.stringify(tabData) }
+            ]
+        };
+
+        // 如果该提供商支持 JSON Mode，则添加该字段
+        if (provider.supportJsonMode || provider.id === 'custom') {
+            requestBody.response_format = { type: "json_object" };
+        }
+
+        const response = await fetch(apiUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${settings.apiKey}`
             },
-            body: JSON.stringify({
-                model: API_CONFIG.MODEL,
-                messages: [
-                    { role: "system", content: finalPrompt },
-                    { role: "user", content: JSON.stringify(tabData) }
-                ],
-                response_format: { type: "json_object" }
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {
@@ -192,15 +203,29 @@ async function organizeTabsAction(customPrompt) {
 
         const data = await response.json();
         
+        // 错误处理：检查 choices 数组是否存在且不为空
+        if (!data.choices || data.choices.length === 0) {
+            console.error("Invalid API Response:", data);
+            throw new Error(data.error?.message || "API returned no choices");
+        }
+
+        let aiMessageContent = data.choices[0].message.content;
+
+        // 自动取出 Markdown 代码块包裹的内容
+        if (aiMessageContent.includes("```")) {
+            const match = aiMessageContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+            if (match && match[1]) {
+                aiMessageContent = match[1].trim();
+            }
+        }
+
         if (settings.debugMode) {
-            console.log("--- DeepSeek API Response Debug ---");
+            console.log("--- API Response Debug ---");
             console.log("Full API Response:", data);
-            const aiMessageContent = data.choices[0].message.content;
-            console.log("AI Content:", aiMessageContent);
+            console.log("AI Content (Processed):", aiMessageContent);
             console.log("-----------------------------------");
         }
 
-        const aiMessageContent = data.choices[0].message.content;
         const result = JSON.parse(aiMessageContent);
         
         // 兼容某些模型可能返回的对象包裹情况

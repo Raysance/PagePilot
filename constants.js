@@ -1,10 +1,43 @@
-export const API_CONFIG = {
-    URL: "https://api.deepseek.com/chat/completions",
-    MODEL: "deepseek-chat"
-};
+export const API_PROVIDERS = [
+    {
+        id: 'deepseek',
+        name: 'DeepSeek',
+        url: 'https://api.deepseek.com/chat/completions',
+        model: 'deepseek-chat',
+        description: '性价比之王，支持 JSON Mode',
+        supportJsonMode: true
+    },
+    {
+        id: 'openai',
+        name: 'OpenAI (GPT-4o)',
+        url: 'https://api.openai.com/v1/chat/completions',
+        model: 'gpt-4o-mini',
+        description: '业界标杆，智能且快速',
+        supportJsonMode: true
+    },
+    {
+        id: 'groq',
+        name: 'Groq (Llama 3)',
+        url: 'https://api.groq.com/openai/v1/chat/completions',
+        model: 'llama3-70b-8192',
+        description: '极速响应，兼容 OpenAI 格式',
+        supportJsonMode: false
+    },
+    {
+        id: 'custom',
+        name: 'Custom (OpenAI Compatible)',
+        url: '',
+        model: '',
+        description: '自定义 OpenAI 兼容接口',
+        supportJsonMode: true
+    }
+];
 
 export const DEFAULT_SETTINGS = {
+    apiProvider: 'deepseek',
     apiKey: '',
+    customUrl: '',
+    customModel: '',
     prompt: '',
     language: 'zh',
     strategy: 'domain',
@@ -128,7 +161,10 @@ export const TRANSLATIONS = {
         sectionStrategyPrompt: "分组策略",
         labelLang: "界面与分组语言 (Language)",
         labelStrategy: "分组策略 (Grouping Strategy)",
-        labelApiKey: "DeepSeek API Key",
+        labelApiProvider: "API 服务商",
+        labelApiKey: "API Key",
+        labelCustomUrl: "自定义 API URL",
+        labelCustomModel: "自定义模型名称",
         hintPrompt: "自定义 AI 分组逻辑。(不必更改)",
         labelPrompt: "自定义分组 Prompt (Custom Prompt)",
         save: "保存设置",
@@ -152,7 +188,10 @@ export const TRANSLATIONS = {
         sectionStrategyPrompt: "Grouping Strategy",
         labelLang: "Interface & Grouping Language",
         labelStrategy: "Grouping Strategy",
-        labelApiKey: "DeepSeek API Key",
+        labelApiProvider: "API Provider",
+        labelApiKey: "API Key",
+        labelCustomUrl: "Custom API URL",
+        labelCustomModel: "Custom Model Name",
         hintPrompt: "Custom AI grouping logic.(No need to modify)",
         labelPrompt: "Custom Grouping Prompt (Custom Prompt)",
         save: "Save Settings",
