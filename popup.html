@@ -4,80 +4,177 @@
     <meta charset="UTF-8">
     <style>
         body {
-            width: 240px;
-            padding: 20px;
+            width: 280px;
+            padding: 16px;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: #ffffff;
+            background: #f8fafc;
             margin: 0;
-            color: #333;
+            color: #1e293b;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
         .header {
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
-            gap: 10px;
+            justify-content: space-between;
+            margin-bottom: 4px;
         }
         .header h2 {
             font-size: 18px;
             margin: 0;
-            color: #2c3e50;
+            color: #0f172a;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+        .card {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
         .btn-main {
             width: 100%;
-            padding: 12px;
-            background-color: #0078d4;
+            padding: 10px;
+            background-color: #2563eb;
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: 0 2px 6px rgba(0, 120, 212, 0.2);
         }
         .btn-main:hover {
-            background-color: #005a9e;
-            transform: translateY(-1px);
-        }
-        .btn-main:active {
-            transform: translateY(0);
+            background-color: #1d4ed8;
         }
         .btn-main:disabled {
-            background-color: #ccc;
+            background-color: #94a3b8;
             cursor: not-allowed;
-            transform: none;
         }
-        .footer {
-            margin-top: 15px;
-            text-align: center;
+        .search-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        .footer a {
-            color: #666;
-            text-decoration: none;
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding-right: 4px;
+        }
+        .search-input-wrapper input {
+            flex: 1;
+            padding: 10px 12px;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            outline: none;
+            color: #1e293b;
+        }
+        .btn-icon {
+            padding: 6px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .btn-icon:hover {
+            background: #1d4ed8;
+        }
+        .settings-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px;
+        }
+        .checkbox-label {
             font-size: 12px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
         }
-        .footer a:hover {
-            text-decoration: underline;
+        .checkbox-label input {
+            cursor: pointer;
         }
         #status {
-            margin-top: 12px;
-            font-size: 13px;
+            font-size: 12px;
             text-align: center;
-            min-height: 18px;
+            min-height: 16px;
+            font-weight: 500;
+            padding: 0 16px;
         }
-        .error { color: #d13438; }
-        .success { color: #107c10; }
-        .loading { color: #0078d4; }
+        .error { color: #ef4444; }
+        .success { color: #10b981; }
+        .loading { color: #2563eb; }
+        
+        .footer {
+            text-align: center;
+            margin-top: 4px;
+        }
+        .footer a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .footer a:hover {
+            color: #64748b;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h2 id="app-name">PagePilot</h2>
-    </div>
-    <button id="organizeBtn" class="btn-main">智能分组标签页</button>
-    <div id="status"></div>
-    <div class="footer">
-        <a href="#" id="openOptions">设置 (Options)</a>
+    <div class="container">
+        <!-- 顶部栏：标题和全局开关 -->
+        <div class="header">
+            <h2 id="app-name">PagePilot</h2>
+            <label class="checkbox-label" title="开启后将处理所有窗口的标签页">
+                <input type="checkbox" id="globalCrossWindow">
+                <span id="label-cross">跨窗口</span>
+            </label>
+        </div>
+
+        <!-- 功能区 1：智能分组 -->
+        <div class="card">
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600; text-transform: uppercase;">自动分类</div>
+            <button id="organizeBtn" class="btn-main">一键智能分组</button>
+        </div>
+
+        <!-- 功能区 2：智能提取 -->
+        <div class="card">
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600; text-transform: uppercase;">智能提取</div>
+            <div class="search-input-wrapper">
+                <input type="text" id="searchInput" placeholder="搜索或描述要提取的内容...">
+                <button id="extractBtn" class="btn-icon" title="将匹配项移至新窗口">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+            <div id="extractHintText" style="font-size: 11px; color: #94a3b8; margin-top: 4px;"></div>
+        </div>
+
+        <!-- 状态显示区 -->
+        <div id="status"></div>
+
+        <div class="footer">
+            <a href="#" id="openOptions">⚙️ 设置界面与提示词</a>
+        </div>
     </div>
     <script src="popup.js"></script>
 </body>

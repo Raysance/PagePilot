@@ -100,8 +100,7 @@ const translations = {
         testing: "Testing...",
         testSuccess: "Connection successful!",
         testError: "Connection failed: ",
-        labelDebug: "Enable Debug Mode (Log to console)",
-        labelCrossWindow: "Support Cross-Window (Experimental)"
+        labelDebug: "Enable Debug Mode (Log to console)"
     }
 };
 
@@ -119,7 +118,6 @@ function updateUI(lang, strategy = 'domain') {
     document.getElementById('reset').textContent = t.reset;
     document.getElementById('testApiKey').title = t.testBtn;
     document.getElementById('label-debug').textContent = t.labelDebug;
-    document.getElementById('label-crossWindow').textContent = t.labelCrossWindow;
 }
 
 function getPrompt(lang, strategy) {
@@ -192,8 +190,7 @@ function loadOptions() {
         strategy: 'domain',
         apiKey: '',
         prompt: '',
-        debugMode: false,
-        crossWindow: false
+        debugMode: false
     }, (items) => {
         document.getElementById('language').value = items.language;
         document.getElementById('strategy').value = items.strategy;
@@ -207,7 +204,6 @@ function loadOptions() {
         document.getElementById('prompt').value = currentPrompt;
         
         document.getElementById('debugMode').checked = items.debugMode;
-        document.getElementById('crossWindow').checked = items.crossWindow;
         updateUI(items.language, items.strategy);
     });
 }
@@ -219,14 +215,12 @@ document.getElementById('save').addEventListener('click', () => {
     const apiKeyInput = document.getElementById('apiKey').value;
     const prompt = document.getElementById('prompt').value;
     const debugMode = document.getElementById('debugMode').checked;
-    const crossWindow = document.getElementById('crossWindow').checked;
 
     const dataToSave = {
         language,
         strategy,
         prompt,
-        debugMode,
-        crossWindow
+        debugMode
     };
 
     // 只有当用户输入了新内容时才更新 apiKey
