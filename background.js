@@ -11,12 +11,25 @@ async function organizeTabsAction() {
             apiKey: '',
             prompt: '',
             language: 'zh',
+            strategy: 'domain',
             debugMode: false,
             crossWindow: false
         });
 
         if (!settings.apiKey) {
             return { success: false, error: settings.language === 'zh' ? "请先在设置中配置 API Key" : "Please configure API Key in options first" };
+        }
+
+        // 如果 prompt 为空，可能用户从未保存过设置，或者清空了它，这里做个兜底
+        let finalPrompt = settings.prompt;
+        if (!finalPrompt) {
+            // 这里简单定义一下，或者从存储逻辑中确保它不为空
+            // 为了安全，我们重新计算默认值
+            const defaultPromptDomain = `你是一个浏览器标签页 management 助手。根据域名分组...`; // 简略
+            // 实际上 background 最好也能访问到 options.js 里的 getPrompt 逻辑，
+            // 但因为 chrome extension 的限制，通常会把 prompt 存在 storage 里。
+            // 这里我们假设 storage 里已经有了 prompt，如果为空则报错提醒。
+            return { success: false, error: "Prompt is missing. Please save settings first." };
         }
 
         const queryInfo = settings.crossWindow 

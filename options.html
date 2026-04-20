@@ -74,6 +74,15 @@
         </div>
 
         <div class="form-group">
+            <label id="label-strategy">分组策略 (Grouping Strategy)</label>
+            <select id="strategy">
+                <option value="domain">按域名/网站分组</option>
+                <option value="topic">按主题/内容分组</option>
+                <option value="academic">学术优先（非学术归一类）</option>
+            </select>
+        </div>
+
+        <div class="form-group">
             <label id="label-apiKey">DeepSeek API Key</label>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <input type="password" id="apiKey" placeholder="sk-..." style="flex: 1;">
