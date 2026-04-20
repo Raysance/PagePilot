@@ -1,31 +1,4 @@
-const translations = {
-    zh: {
-        btn: "一键智能分组",
-        loading: "正在分析中...",
-        success: "处理完成！",
-        options: "⚙️ 设置界面与提示词",
-        error: "出错了，请检查设置",
-        extract: "智能提取",
-        extractPlaceholder: "输入提取指令...",
-        extractSuccess: "提取成功",
-        noTabs: "未匹配到标签页",
-        crossWindow: "跨窗口",
-        extractHint: "例如：“Bilibili页面” 或 “xv6项目有关页面”"
-    },
-    en: {
-        btn: "One-Click Organize",
-        loading: "Analyzing...",
-        success: "Done!",
-        options: "⚙️ Settings & Prompts",
-        error: "Error, check settings",
-        extract: "Smart Extract",
-        extractPlaceholder: "Enter instruction...",
-        extractSuccess: "Extracted",
-        noTabs: "No matches",
-        crossWindow: "Cross Window",
-        extractHint: "e.g., 'Extract YouTube' or 'Find pages about sys'"
-    }
-};
+import { POPUP_TRANSLATIONS, STRATEGIES } from './constants.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 监听存储变化以实时更新语言
@@ -35,16 +8,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    const settings = await chrome.storage.sync.get({ language: 'zh', crossWindow: false });
+    const settings = await chrome.storage.sync.get({ language: 'zh', crossWindow: false, strategy: 'domain' });
     updateContent(settings.language);
 
     function updateContent(lang) {
-        const t = translations[lang];
+        const t = POPUP_TRANSLATIONS[lang] || POPUP_TRANSLATIONS.en;
+        document.getElementById('group-title').textContent = t.groupTitle;
+        document.getElementById('extract-title').textContent = t.extractTitle;
         document.getElementById('organizeBtn').textContent = t.btn;
         document.getElementById('openOptions').textContent = t.options;
         document.getElementById('searchInput').placeholder = t.extractPlaceholder;
         document.getElementById('label-cross').textContent = t.crossWindow;
         document.getElementById('extractHintText').textContent = t.extractHint;
+        document.getElementById('extractBtn').title = t.extractTooltip;
+
+        // 动态填充策略选择框
+        const strategySelect = document.getElementById('strategySelect');
+        // 如果已经有选中的值，先存起来
+        const previousVal = strategySelect.value;
+        strategySelect.innerHTML = '';
+
+        // 添加默认选项
+        const optDefault = document.createElement('option');
+        optDefault.value = 'current';
+        optDefault.textContent = t.optCurrent;
+        strategySelect.appendChild(optDefault);
+
+        // 从 STRATEGIES 动态获取
+        STRATEGIES.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = s.name[lang] || s.name.en;
+            strategySelect.appendChild(opt);
+        });
+        
+        // 恢复之前选中的值，如果没有则默认 current
+        if (previousVal) {
+            strategySelect.value = previousVal;
+        } else {
+            strategySelect.value = 'current';
+        }
 
         // 如果当前正在显示状态，也翻译状态文字
         const status = document.getElementById('status');
@@ -59,6 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const extractBtn = document.getElementById('extractBtn');
     const searchInput = document.getElementById('searchInput');
     const globalCrossWindow = document.getElementById('globalCrossWindow');
+    const strategySelect = document.getElementById('strategySelect');
 
     // 初始化勾选框状态
     globalCrossWindow.checked = settings.crossWindow;
@@ -71,16 +75,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.addEventListener('click', async () => {
         const settings = await chrome.storage.sync.get({ 
             language: 'zh',
-            crossWindow: false 
+            crossWindow: false,
+            prompt: ''
         });
         const lang = settings.language;
-        const t = translations[lang];
+        const t = POPUP_TRANSLATIONS[lang] || POPUP_TRANSLATIONS.en;
+
+        const selectedStrategyId = strategySelect.value;
+        let finalPrompt = settings.prompt;
+
+        if (selectedStrategyId !== 'current') {
+            const strategy = STRATEGIES.find(s => s.id === selectedStrategyId);
+            if (strategy) {
+                finalPrompt = strategy.prompts[lang] || strategy.prompts.en;
+            }
+        }
 
         btn.disabled = true;
         status.textContent = t.loading;
         status.className = 'loading';
 
-        chrome.runtime.sendMessage({ action: "organizeTabs" }, (response) => {
+        chrome.runtime.sendMessage({ 
+            action: "organizeTabs",
+            customPrompt: finalPrompt 
+        }, (response) => {
             btn.disabled = false;
             if (response && response.success) {
                 status.textContent = t.success;
@@ -107,11 +125,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             crossWindow: false
         });
         const crossWindow = settings.crossWindow;
-        const t = translations[settings.language];
+        const t = POPUP_TRANSLATIONS[settings.language] || POPUP_TRANSLATIONS.en;
 
         if (!keyword) return;
         if (!settings.apiKey) {
-            status.textContent = settings.language === 'zh' ? "请先配置 API Key" : "Please configure API Key";
+            status.textContent = t.apiKeyError;
             status.className = 'error';
             return;
         }

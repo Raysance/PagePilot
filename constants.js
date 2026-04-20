@@ -1,0 +1,167 @@
+export const STRATEGIES = [
+    {
+        id: 'domain',
+        name: {
+            zh: '按域名/网站分组',
+            en: 'By Domain/Website'
+        },
+        prompts: {
+            zh: `你是一个浏览器标签页管理助手。请分析以下提供的标签页列表（包含标题和URL），并根据标签页所属的【域名/网站名】将它们划分为合适的小组。
+输出必须是纯 JSON 格式，结构如下：
+[
+  {"groupName": "域名或网站名", "tabIds": [1, 2, 3]}
+]
+注意：
+1. 组名应为网站的名称或域名（例如：GitHub, Google, 百度, Stack Overflow）。
+2. 必须包含所有提供的 tabId。
+3. 仅返回 JSON，不要有任何解释文字。`,
+            en: `You are a browser tab management assistant. Analyze the following list of tabs (titles and URLs) and group them based on their 【Domain/Website Name】.
+Output MUST be in pure JSON:
+[
+  {"groupName": "Website Name", "tabIds": [1, 2, 3]}
+]
+Notes:
+1. Group names should be the website or domain name (e.g., GitHub, Google, Wikipedia).
+2. Include all provided tabIds.
+3. Return ONLY JSON.`
+        }
+    },
+    {
+        id: 'topic',
+        name: {
+            zh: '按主题/内容分组',
+            en: 'By Topic/Content'
+        },
+        prompts: {
+            zh: `你是一个浏览器标签页管理助手。请分析以下提供的标签页列表（包含标题和URL），并根据标签页的【核心主题或内容分类】将它们划分为合适的小组。
+输出必须是纯 JSON 格式，结构如下：
+[
+  {"groupName": "主题概括", "tabIds": [1, 2, 3]}
+]
+注意：
+1. 组名应简短有力，反映该组标签的共同主题（例如：开发文档, 购物, 新闻, 工作项目）。
+2. 请特别参考 URL 路径中的关键词（如 /docs/, /vortex/, /project/, /blog/）来辅助精准分类，特别是当标题信息不足时。
+3. 必须包含所有提供的 tabId。
+4. 仅返回 JSON，不要有任何解释文字。`,
+            en: `You are a browser tab management assistant. Analyze the following list of tabs (titles and URLs) and group them based on their 【Core Topic or Content Category】.
+Output MUST be in pure JSON:
+[
+  {"groupName": "Topic Name", "tabIds": [1, 2, 3]}
+]
+Notes:
+1. Group names should be concise and reflect the shared topic (e.g., Dev Docs, Shopping, News, Work Project).
+2. Pay special attention to keywords in the URL path (e.g., /docs/, /repo/, /issue/) to assist in precise categorization, especially when the title is vague.
+3. Include all provided tabIds.
+4. Return ONLY JSON.`
+        }
+    },
+    {
+        id: 'academic',
+        name: {
+            zh: '学术优先（非学术归一类）',
+            en: 'Academic Priority'
+        },
+        prompts: {
+            zh: `你是一个学术科研的浏览器分类助手。请分析以下标签页列表，并按照以下逻辑进行分组：
+1. 【学术相关】：将所有与学术研究、论文阅读（如 Arxiv, IEEE, Google Scholar）、科研工具、学术讨论相关的标签页，根据具体的【研究主题】（如：大语言模型， 计算机系统，计算机视觉等）分组。
+2. 【学术之外】：将所有与学术无关的标签页（如：娱乐, 社交, 新闻）统一归入一个名为“常规/日常”的分组中。
+
+输出必须是纯 JSON 格式：
+[
+  {"groupName": "具体学术主题 或 常规/日常", "tabIds": [1, 2, 3]}
+]
+注意：
+1. 学术小组的名称应体现具体研究方向。
+2. 必须包含所有提供的 tabId。
+3. 仅返回 JSON。`,
+            en: `You are an academic research assistant. Analyze the following list of tabs and group them using this logic:
+1. 【Academic Related】: Group tabs related to research, papers (e.g., Arxiv, IEEE), research tools, or academic discussions into specific groups based on their 【Research Topic】 (e.g., Deep Learning, Physics, Data Analysis).
+2. 【Non-Academic】: Group all other unrelated tabs (e.g., Entertainment, Social Media) into a single group named "General/Routine".
+
+Output MUST be in pure JSON:
+[
+  {"groupName": "Specific Topic or General/Routine", "tabIds": [1, 2, 3]}
+]
+Notes:
+1. Academic group names should reflect the specific research field.
+2. Include all provided tabIds.
+3. Return ONLY JSON.`
+        }
+    }
+];
+
+export const TRANSLATIONS = {
+    zh: {
+        title: "PagePilot 设置",
+        labelLang: "界面与分组语言 (Language)",
+        labelStrategy: "分组策略 (Grouping Strategy)",
+        labelApiKey: "DeepSeek API Key",
+        labelPrompt: "当前 Prompt 预览 (可自定义)",
+        save: "保存设置",
+        reset: "恢复当前策略默认 Prompt",
+        status: "设置已保存！",
+        testBtn: "测试连接",
+        testing: "正在测试...",
+        testSuccess: "连接成功！",
+        testError: "连接失败: ",
+        labelDebug: "开启调试模式 (在控制台输出日志)",
+        labelCrossWindow: "支持跨窗口整理 (Experimental)"
+    },
+    en: {
+        title: "PagePilot Options",
+        labelLang: "Interface & Grouping Language",
+        labelStrategy: "Grouping Strategy",
+        labelApiKey: "DeepSeek API Key",
+        labelPrompt: "Current Prompt Preview (Customizable)",
+        save: "Save Settings",
+        reset: "Reset to Default Prompt",
+        status: "Settings saved!",
+        testBtn: "Test Connection",
+        testing: "Testing...",
+        testSuccess: "Connection successful!",
+        testError: "Connection failed: ",
+        labelDebug: "Enable Debug Mode (Log to console)",
+        labelCrossWindow: "Support cross-window organization (Experimental)"
+    }
+};
+
+export const POPUP_TRANSLATIONS = {
+    zh: {
+        appName: "PagePilot",
+        groupTitle: "自动分类",
+        extractTitle: "智能提取",
+        btn: "一键智能分组",
+        loading: "正在分析中...",
+        success: "处理完成！",
+        options: "⚙️ 设置界面与提示词",
+        error: "出错了，请检查设置",
+        extract: "智能提取",
+        extractPlaceholder: "输入提取指令...",
+        extractSuccess: "提取成功",
+        noTabs: "未匹配到标签页",
+        crossWindow: "跨窗口",
+        extractHint: "例如：“Bilibili页面” 或 “xv6项目有关页面”",
+        apiKeyError: "请先配置 API Key",
+        extractTooltip: "将匹配项移至新窗口",
+        optCurrent: "使用当前设置的提示词"
+    },
+    en: {
+        appName: "PagePilot",
+        groupTitle: "AUTO GROUP",
+        extractTitle: "SMART EXTRACT",
+        btn: "One-Click Organize",
+        loading: "Analyzing...",
+        success: "Done!",
+        options: "⚙️ Settings & Prompts",
+        error: "Error, check settings",
+        extract: "Smart Extract",
+        extractPlaceholder: "Enter instruction...",
+        extractSuccess: "Extracted",
+        noTabs: "No matches",
+        crossWindow: "Cross Window",
+        extractHint: "e.g., 'Extract YouTube' or 'Find pages about sys'",
+        apiKeyError: "Please configure API Key",
+        extractTooltip: "Move matches to new window",
+        optCurrent: "Use Saved Prompt"
+    }
+};

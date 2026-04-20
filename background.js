@@ -1,11 +1,11 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "organizeTabs") {
-        organizeTabsAction().then(sendResponse);
+        organizeTabsAction(request.customPrompt).then(sendResponse);
         return true; // 保持异步
     }
 });
 
-async function organizeTabsAction() {
+async function organizeTabsAction(customPrompt) {
     try {
         const settings = await chrome.storage.sync.get({
             apiKey: '',
@@ -20,15 +20,10 @@ async function organizeTabsAction() {
             return { success: false, error: settings.language === 'zh' ? "请先在设置中配置 API Key" : "Please configure API Key in options first" };
         }
 
-        // 如果 prompt 为空，可能用户从未保存过设置，或者清空了它，这里做个兜底
-        let finalPrompt = settings.prompt;
+        // 使用传递过来的自定义提示词，如果没有则使用存储中的
+        let finalPrompt = customPrompt || settings.prompt;
+        
         if (!finalPrompt) {
-            // 这里简单定义一下，或者从存储逻辑中确保它不为空
-            // 为了安全，我们重新计算默认值
-            const defaultPromptDomain = `你是一个浏览器标签页 management 助手。根据域名分组...`; // 简略
-            // 实际上 background 最好也能访问到 options.js 里的 getPrompt 逻辑，
-            // 但因为 chrome extension 的限制，通常会把 prompt 存在 storage 里。
-            // 这里我们假设 storage 里已经有了 prompt，如果为空则报错提醒。
             return { success: false, error: "Prompt is missing. Please save settings first." };
         }
 
@@ -36,12 +31,27 @@ async function organizeTabsAction() {
             ? { windowType: 'normal' } 
             : { currentWindow: true, windowType: 'normal' };
         const tabs = await chrome.tabs.query(queryInfo);
-        const tabData = tabs.map(t => ({ id: t.id, title: t.title, url: t.url, windowId: t.windowId }));
+        
+        // 增强 tabData 的结构，并对 URL 进行解码以让 AI 识别中文路径
+        const tabData = tabs.map(t => {
+            let decodedUrl = t.url;
+            try {
+                decodedUrl = decodeURIComponent(t.url);
+            } catch (e) {
+                // 如果解码失败（例如 URL 包含不合法的 % 字符），则保留原样
+            }
+            return { 
+                id: t.id, 
+                url: decodedUrl, 
+                title: t.title,
+                windowId: t.windowId 
+            };
+        });
 
         if (settings.debugMode) {
             console.log("--- DeepSeek API Request Debug ---");
             console.log("Target Language:", settings.language);
-            console.log("System Prompt:", settings.prompt);
+            console.log("System Prompt:", finalPrompt);
             console.log("Tabs Data (User Message):", tabData);
             console.log("----------------------------------");
         }
@@ -55,7 +65,7 @@ async function organizeTabsAction() {
             body: JSON.stringify({
                 model: "deepseek-chat",
                 messages: [
-                    { role: "system", content: settings.prompt },
+                    { role: "system", content: finalPrompt },
                     { role: "user", content: JSON.stringify(tabData) }
                 ],
                 response_format: { type: "json_object" }
