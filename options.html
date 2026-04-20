@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title data-i18n="extName"></title>
+  <style>
+    body { 
+      font-family: 'Segoe UI', system-ui, sans-serif; 
+      padding: 40px; 
+      background-color: #f3f2f1;
+      color: #323130;
+      display: flex;
+      justify-content: center;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 400px;
+    }
+    h2 { margin-top: 0; color: #0078d4; font-size: 20px; }
+    .field { margin-top: 20px; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+    input[type="text"] { 
+      width: 100%; 
+      padding: 10px; 
+      box-sizing: border-box; 
+      border: 1px solid #8a8886;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    button { 
+      background-color: #0078d4; 
+      color: white; 
+      border: none; 
+      padding: 10px 24px; 
+      border-radius: 4px; 
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover { background-color: #106ebe; }
+    .status { margin-top: 15px; color: #107c10; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2 data-i18n="settingTitle">DeepSeek API 设置</h2>
+    <div class="field">
+      <label for="apiKey" data-i18n="apiKeyLabel">API Key:</label>
+      <input type="text" id="apiKey" placeholder="sk-...">
+    </div>
+    <button id="save" data-i18n="saveBtn">保存</button>
+    <div id="status" class="status"></div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    :root {
+      --primary-color: #0078d4;
+      --hover-color: #106ebe;
+      --bg-color: #f8f9fa;
+      --text-color: #323130;
+    }
+    body { 
+      width: 280px; 
+      padding: 20px; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    .logo {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    button { 
+      width: 100%; 
+      padding: 12px; 
+      border: none;
+      border-radius: 6px;
+      background-color: var(--primary-color);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer; 
+      transition: background-color 0.2s, transform 0.1s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button:hover { 
+      background-color: var(--hover-color); 
+    }
+    button:active {
+      transform: translateY(1px);
+    }
+    #status { 
+      font-size: 13px; 
+      color: #605e5c; 
+      text-align: center;
+      min-height: 18px;
+    }
+    .footer {
+      font-size: 11px;
+      color: #a19f9d;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">📑</div>
+    <button id="sortBtn" data-i18n="sortBtn">智能排序与分组</button>
+    <div id="status"></div>
+    <div class="footer">Powered by DeepSeek AI</div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
