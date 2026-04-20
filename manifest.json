@@ -1,9 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "__MSG_extName__",
-  "version": "1.1",
-  "description": "__MSG_extDesc__",
-  "default_locale": "zh_CN",
+  "name": "PagePilot",
+  "version": "1.0",
+  "description": "使用 DeepSeek API 智能整理和分组 Edge 标签页。",
   "permissions": [
     "tabs",
     "tabGroups",
@@ -13,10 +12,17 @@
     "https://api.deepseek.com/*"
   ],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": "icons/icon.svg"
   },
   "options_page": "options.html",
   "background": {
     "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon.svg",
+    "32": "icons/icon.svg",
+    "48": "icons/icon.svg",
+    "128": "icons/icon.svg"
   }
 }

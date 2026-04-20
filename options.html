@@ -1,59 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title data-i18n="extName"></title>
-  <style>
-    body { 
-      font-family: 'Segoe UI', system-ui, sans-serif; 
-      padding: 40px; 
-      background-color: #f3f2f1;
-      color: #323130;
-      display: flex;
-      justify-content: center;
-    }
-    .card {
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 400px;
-    }
-    h2 { margin-top: 0; color: #0078d4; font-size: 20px; }
-    .field { margin-top: 20px; }
-    label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
-    input[type="text"] { 
-      width: 100%; 
-      padding: 10px; 
-      box-sizing: border-box; 
-      border: 1px solid #8a8886;
-      border-radius: 4px;
-      margin-bottom: 20px;
-    }
-    button { 
-      background-color: #0078d4; 
-      color: white; 
-      border: none; 
-      padding: 10px 24px; 
-      border-radius: 4px; 
-      cursor: pointer;
-      font-weight: 600;
-    }
-    button:hover { background-color: #106ebe; }
-    .status { margin-top: 15px; color: #107c10; font-weight: 600; }
-  </style>
+    <meta charset="UTF-8">
+    <title>PagePilot 设置</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 { font-size: 24px; margin-bottom: 24px; color: #2c3e50; font-weight: 600; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; color: #555; }
+        input[type="text"], input[type="password"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #0078d4;
+        }
+        textarea { height: 120px; resize: vertical; }
+        .btn-group { display: flex; gap: 10px; margin-top: 24px; }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .btn-primary { background-color: #0078d4; color: white; }
+        .btn-primary:hover { background-color: #005a9e; }
+        .btn-secondary { background-color: #f0f0f0; color: #333; }
+        .btn-secondary:hover { background-color: #e0e0e0; }
+        .status { margin-top: 15px; font-size: 13px; color: #107c10; display: none; }
+    </style>
 </head>
 <body>
-  <div class="card">
-    <h2 data-i18n="settingTitle">DeepSeek API 设置</h2>
-    <div class="field">
-      <label for="apiKey" data-i18n="apiKeyLabel">API Key:</label>
-      <input type="text" id="apiKey" placeholder="sk-...">
-    </div>
-    <button id="save" data-i18n="saveBtn">保存</button>
-    <div id="status" class="status"></div>
-  </div>
+    <div class="container">
+        <h1 id="title">PagePilot 设置</h1>
+        
+        <div class="form-group">
+            <label id="label-lang">界面与分组语言 (Language)</label>
+            <select id="language">
+                <option value="zh">简体中文</option>
+                <option value="en">English</option>
+            </select>
+        </div>
 
-  <script src="options.js"></script>
+        <div class="form-group">
+            <label id="label-apiKey">DeepSeek API Key</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="password" id="apiKey" placeholder="sk-..." style="flex: 1;">
+                <button id="testApiKey" class="btn-secondary btn-small" title="测试连接" style="display: flex; align-items: center; justify-content: center; padding: 6px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="test-status" style="margin-top: 5px; font-size: 12px; display: none;"></div>
+        </div>
+
+        <div class="form-group">
+            <label id="label-prompt">自定义分析 Prompt (Custom Prompt)</label>
+            <textarea id="prompt"></textarea>
+        </div>
+
+        <div class="btn-group">
+            <button id="save" class="btn-primary">保存设置</button>
+            <button id="reset" class="btn-secondary">恢复默认 Prompt</button>
+        </div>
+        <div id="status" class="status">设置已保存！</div>
+    </div>
+    <script src="options.js"></script>
 </body>
-</html>
