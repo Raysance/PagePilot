@@ -31,7 +31,8 @@ const translations = {
         testing: "正在测试...",
         testSuccess: "连接成功！",
         testError: "连接失败: ",
-        labelDebug: "开启调试模式 (在控制台输出日志)"
+        labelDebug: "开启调试模式 (在控制台输出日志)",
+        labelCrossWindow: "支持跨窗口整理 (Experimental)"
     },
     en: {
         title: "PagePilot Options",
@@ -45,7 +46,8 @@ const translations = {
         testing: "Testing...",
         testSuccess: "Connection successful!",
         testError: "Connection failed: ",
-        labelDebug: "Enable Debug Mode (Log to console)"
+        labelDebug: "Enable Debug Mode (Log to console)",
+        labelCrossWindow: "Support Cross-Window (Experimental)"
     }
 };
 
@@ -59,6 +61,7 @@ function updateUI(lang) {
     document.getElementById('reset').textContent = t.reset;
     document.getElementById('testApiKey').title = t.testBtn;
     document.getElementById('label-debug').textContent = t.labelDebug;
+    document.getElementById('label-crossWindow').textContent = t.labelCrossWindow;
 }
 
 // 测试 API Key
@@ -120,7 +123,8 @@ function loadOptions() {
         language: 'zh',
         apiKey: '',
         prompt: defaultPrompt,
-        debugMode: false
+        debugMode: false,
+        crossWindow: false
     }, (items) => {
         document.getElementById('language').value = items.language;
         // 如果已有 API Key，显示掩码占位符
@@ -129,6 +133,7 @@ function loadOptions() {
         }
         document.getElementById('prompt').value = items.prompt;
         document.getElementById('debugMode').checked = items.debugMode;
+        document.getElementById('crossWindow').checked = items.crossWindow;
         updateUI(items.language);
     });
 }
@@ -139,11 +144,13 @@ document.getElementById('save').addEventListener('click', () => {
     const apiKeyInput = document.getElementById('apiKey').value;
     const prompt = document.getElementById('prompt').value;
     const debugMode = document.getElementById('debugMode').checked;
+    const crossWindow = document.getElementById('crossWindow').checked;
 
     const dataToSave = {
         language,
         prompt,
-        debugMode
+        debugMode,
+        crossWindow
     };
 
     // 只有当用户输入了新内容时才更新 apiKey

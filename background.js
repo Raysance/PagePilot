@@ -11,15 +11,19 @@ async function organizeTabsAction() {
             apiKey: '',
             prompt: '',
             language: 'zh',
-            debugMode: false
+            debugMode: false,
+            crossWindow: false
         });
 
         if (!settings.apiKey) {
             return { success: false, error: settings.language === 'zh' ? "请先在设置中配置 API Key" : "Please configure API Key in options first" };
         }
 
-        const tabs = await chrome.tabs.query({ currentWindow: true, windowType: 'normal' });
-        const tabData = tabs.map(t => ({ id: t.id, title: t.title, url: t.url }));
+        const queryInfo = settings.crossWindow 
+            ? { windowType: 'normal' } 
+            : { currentWindow: true, windowType: 'normal' };
+        const tabs = await chrome.tabs.query(queryInfo);
+        const tabData = tabs.map(t => ({ id: t.id, title: t.title, url: t.url, windowId: t.windowId }));
 
         if (settings.debugMode) {
             console.log("--- DeepSeek API Request Debug ---");
@@ -63,8 +67,40 @@ async function organizeTabsAction() {
 
         for (const group of groups) {
             if (group.tabIds && group.tabIds.length > 0) {
-                const groupId = await chrome.tabs.group({ tabIds: group.tabIds });
-                await chrome.tabGroups.update(groupId, { title: group.groupName });
+                // 如果是跨窗口整理，需要先处理标签页所属的窗口
+                if (settings.crossWindow) {
+                    // 获取这些 tab 现在的 windowId
+                    const tabInfos = await Promise.all(group.tabIds.map(id => 
+                        chrome.tabs.get(id).catch(() => null)
+                    ));
+                    
+                    const validTabs = tabInfos.filter(t => t !== null);
+                    if (validTabs.length === 0) continue;
+
+                    // 找出出现次数最多的 windowId 作为目标窗口，避免频繁跨窗口移动
+                    const windowCounts = {};
+                    validTabs.forEach(t => {
+                        windowCounts[t.windowId] = (windowCounts[t.windowId] || 0) + 1;
+                    });
+                    const targetWindowId = parseInt(Object.keys(windowCounts).reduce((a, b) => 
+                        windowCounts[a] > windowCounts[b] ? a : b
+                    ));
+
+                    // 将不在目标窗口的标签移动过去
+                    for (const tab of validTabs) {
+                        if (tab.windowId !== targetWindowId) {
+                            await chrome.tabs.move(tab.id, { windowId: targetWindowId, index: -1 });
+                        }
+                    }
+
+                    // 在目标窗口中创建或加入组
+                    const groupId = await chrome.tabs.group({ tabIds: group.tabIds });
+                    await chrome.tabGroups.update(groupId, { title: group.groupName });
+                } else {
+                    // 仅当前窗口逻辑
+                    const groupId = await chrome.tabs.group({ tabIds: group.tabIds });
+                    await chrome.tabGroups.update(groupId, { title: group.groupName });
+                }
             }
         }
 
