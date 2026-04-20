@@ -54,24 +54,74 @@
             outline: none;
             cursor: pointer;
         }
+        .btn-group {
+            display: flex;
+            gap: 0;
+            position: relative;
+        }
         .btn-main {
-            width: 100%;
+            flex: 1;
             padding: 10px;
             background-color: #2563eb;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 8px 0 0 8px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .btn-main:hover {
+        .btn-dropdown {
+            width: 40px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-left: 1px solid rgba(255,255,255,0.2);
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .btn-dropdown:hover, .btn-main:hover {
             background-color: #1d4ed8;
         }
-        .btn-main:disabled {
+        .btn-main:disabled, .btn-dropdown:disabled {
             background-color: #94a3b8;
             cursor: not-allowed;
+        }
+        .strategy-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-top: 4px;
+            display: none;
+            z-index: 100;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        .strategy-menu.show {
+            display: block;
+        }
+        .strategy-item {
+            padding: 10px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: #1e293b;
+        }
+        .strategy-item:hover {
+            background: #f1f5f9;
+        }
+        .strategy-item.active {
+            color: #2563eb;
+            background: #eff6ff;
+            font-weight: 600;
         }
         .search-group {
             display: flex;
@@ -167,13 +217,24 @@
 
         <!-- 功能区 1：智能分组 -->
         <div class="card">
-            <div id="group-title" style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600; text-transform: uppercase;">自动分类</div>
-            <div class="select-wrapper">
-                <select id="strategySelect">
-                    <!-- 选项由 popup.js 动态生成 -->
-                </select>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <div id="group-title" style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase;">自动分组</div>
+                <div id="currentStrategyName" style="font-size: 11px; color: #2563eb; font-weight: 500; background: #eff6ff; padding: 2px 6px; border-radius: 4px;"></div>
             </div>
-            <button id="organizeBtn" class="btn-main">一键智能分组</button>
+            <div class="btn-group">
+                <button id="organizeBtn" class="btn-main">一键智能分组</button>
+                <button id="strategyToggle" class="btn-dropdown">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div id="strategyMenu" class="strategy-menu">
+                    <!-- 选项由 popup.js 动态生成 -->
+                </div>
+            </div>
+            <!-- 隐藏的 select 用于保持原有逻辑兼容性 -->
+            <select id="strategySelect" style="display: none;"></select>
+            <div id="groupHintText" style="font-size: 11px; color: #94a3b8; margin-top: 4px;"></div>
         </div>
 
         <!-- 功能区 2：智能提取 -->
@@ -194,7 +255,7 @@
         <div id="status"></div>
 
         <div class="footer">
-            <a href="#" id="openOptions">⚙️ 设置界面与提示词</a>
+            <a href="#" id="openOptions">⚙️ 设置</a>
         </div>
     </div>
     <script type="module" src="popup.js"></script>

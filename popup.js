@@ -1,4 +1,4 @@
-import { POPUP_TRANSLATIONS, STRATEGIES } from './constants.js';
+import { POPUP_TRANSLATIONS, STRATEGIES, API_CONFIG, DEFAULT_SETTINGS, SEARCH_SYSTEM_PROMPTS } from './constants.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 监听存储变化以实时更新语言
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    const settings = await chrome.storage.sync.get({ language: 'zh', crossWindow: false, strategy: 'domain' });
+    const settings = await chrome.storage.sync.get(DEFAULT_SETTINGS);
     updateContent(settings.language);
 
     function updateContent(lang) {
@@ -19,27 +19,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('openOptions').textContent = t.options;
         document.getElementById('searchInput').placeholder = t.extractPlaceholder;
         document.getElementById('label-cross').textContent = t.crossWindow;
+        document.getElementById('groupHintText').textContent = t.groupHint;
         document.getElementById('extractHintText').textContent = t.extractHint;
         document.getElementById('extractBtn').title = t.extractTooltip;
 
-        // 动态填充策略选择框
         const strategySelect = document.getElementById('strategySelect');
+        const strategyMenu = document.getElementById('strategyMenu');
+        const currentStrategyDisplay = document.getElementById('currentStrategyName');
+        
         // 如果已经有选中的值，先存起来
         const previousVal = strategySelect.value;
         strategySelect.innerHTML = '';
+        strategyMenu.innerHTML = '';
+
+        const createOption = (val, text) => {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = text;
+            strategySelect.appendChild(opt);
+
+            const item = document.createElement('div');
+            const isActive = val === (previousVal || 'current');
+            item.className = 'strategy-item' + (isActive ? ' active' : '');
+            item.textContent = text;
+            item.dataset.value = val;
+            if (isActive) currentStrategyDisplay.textContent = text;
+
+            item.onclick = () => {
+                strategySelect.value = val;
+                currentStrategyDisplay.textContent = text;
+                document.querySelectorAll('.strategy-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                strategyMenu.classList.remove('show');
+            };
+            strategyMenu.appendChild(item);
+        };
 
         // 添加默认选项
-        const optDefault = document.createElement('option');
-        optDefault.value = 'current';
-        optDefault.textContent = t.optCurrent;
-        strategySelect.appendChild(optDefault);
+        createOption('current', t.optCurrent);
 
         // 从 STRATEGIES 动态获取
         STRATEGIES.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.id;
-            opt.textContent = s.name[lang] || s.name.en;
-            strategySelect.appendChild(opt);
+            createOption(s.id, s.name[lang] || s.name.en);
         });
         
         // 恢复之前选中的值，如果没有则默认 current
@@ -63,6 +84,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const searchInput = document.getElementById('searchInput');
     const globalCrossWindow = document.getElementById('globalCrossWindow');
     const strategySelect = document.getElementById('strategySelect');
+    const strategyToggle = document.getElementById('strategyToggle');
+    const strategyMenu = document.getElementById('strategyMenu');
+
+    // 切换菜单显示
+    strategyToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        strategyMenu.classList.toggle('show');
+    });
+
+    // 点击外部关闭菜单
+    document.addEventListener('click', () => {
+        strategyMenu.classList.remove('show');
+    });
 
     // 初始化勾选框状态
     globalCrossWindow.checked = settings.crossWindow;
@@ -73,11 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     btn.addEventListener('click', async () => {
-        const settings = await chrome.storage.sync.get({ 
-            language: 'zh',
-            crossWindow: false,
-            prompt: ''
-        });
+        const settings = await chrome.storage.sync.get(DEFAULT_SETTINGS);
         const lang = settings.language;
         const t = POPUP_TRANSLATIONS[lang] || POPUP_TRANSLATIONS.en;
 
@@ -118,12 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     extractBtn.addEventListener('click', async () => {
         const keyword = searchInput.value.trim();
-        const settings = await chrome.storage.sync.get({ 
-            language: 'zh',
-            apiKey: '',
-            debugMode: false,
-            crossWindow: false
-        });
+        const settings = await chrome.storage.sync.get(DEFAULT_SETTINGS);
         const crossWindow = settings.crossWindow;
         const t = POPUP_TRANSLATIONS[settings.language] || POPUP_TRANSLATIONS.en;
 
@@ -144,24 +169,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tabs = await chrome.tabs.query(queryInfo);
             const tabData = tabs.map(t => ({ id: t.id, title: t.title, url: t.url }));
 
-            const systemPrompt = settings.language === 'zh' 
-                ? `你是一个标签页筛选助手。请根据用户的需求描述，从提供的标签页列表中筛选出匹配的标签页。
-                    返回格式必须是纯 JSON 数组，仅包含匹配的 tabId。
-                    例如：[1, 2, 3]
-                    如果没有匹配项，返回 []。不要包含任何解释文字。`
-                : `You are a tab filtering assistant. Filter the provided list of tabs based on the user's requirement.
-                    Return MUST be a pure JSON array of matched tabIds.
-                    Example: [1, 2, 3]
-                    Return [] if no matches. Do not include any explanation.`;
+            const systemPrompt = SEARCH_SYSTEM_PROMPTS[settings.language] || SEARCH_SYSTEM_PROMPTS.en;
 
-            const response = await fetch("https://api.deepseek.com/chat/completions", {
+            const response = await fetch(API_CONFIG.URL, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${settings.apiKey}`
                 },
                 body: JSON.stringify({
-                    model: "deepseek-chat",
+                    model: API_CONFIG.MODEL,
                     messages: [
                         { role: "system", content: systemPrompt },
                         { role: "user", content: `用户需求：${keyword}\n\n标签页列表：${JSON.stringify(tabData)}` }

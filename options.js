@@ -1,8 +1,10 @@
-import { STRATEGIES, TRANSLATIONS } from './constants.js';
+import { STRATEGIES, TRANSLATIONS, API_CONFIG, DEFAULT_SETTINGS } from './constants.js';
 
 function updateUI(lang, strategy = 'domain') {
     const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
     document.getElementById('title').textContent = t.title;
+    document.getElementById('section-api-lang').textContent = t.sectionApiLang;
+    document.getElementById('section-strategy-prompt').textContent = t.sectionStrategyPrompt;
     document.getElementById('label-lang').textContent = t.labelLang;
     document.getElementById('label-strategy').textContent = t.labelStrategy;
     
@@ -18,9 +20,10 @@ function updateUI(lang, strategy = 'domain') {
     strategySelect.value = currentVal;
 
     document.getElementById('label-apiKey').textContent = t.labelApiKey;
+    document.getElementById('hint-prompt').textContent = t.hintPrompt;
     document.getElementById('label-prompt').textContent = t.labelPrompt;
     document.getElementById('save').textContent = t.save;
-    document.getElementById('reset').textContent = t.reset;
+    document.getElementById('reset').title = t.reset;
     document.getElementById('testApiKey').title = t.testBtn;
     document.getElementById('label-debug').textContent = t.labelDebug;
 }
@@ -46,52 +49,58 @@ document.getElementById('testApiKey').addEventListener('click', async () => {
 
     if (!keyToTest) {
         testStatus.textContent = lang === 'zh' ? "请输入 API Key" : "Please enter API Key";
-        testStatus.style.color = '#d13438';
+        testStatus.className = 'status-pill status-error';
         testStatus.style.display = 'block';
         return;
     }
 
-    testStatus.textContent = t.testing;
-    testStatus.style.color = '#0078d4';
-    testStatus.style.display = 'block';
+    const status = document.getElementById('status');
+    const statusText = document.getElementById('status-text');
+    const statusIcon = document.getElementById('status-icon');
+    
+    statusText.textContent = t.testing;
+    statusIcon.innerHTML = `<svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path></svg>`;
+    status.className = 'status-toast status-loading show';
+    testStatus.style.display = 'none';
 
     try {
-        const response = await fetch("https://api.deepseek.com/chat/completions", {
+        const response = await fetch(API_CONFIG.URL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${keyToTest}`
             },
             body: JSON.stringify({
-                model: "deepseek-chat",
+                model: API_CONFIG.MODEL,
                 messages: [{ role: "user", content: "hi" }],
                 max_tokens: 5
             })
         });
 
         if (response.ok) {
-            testStatus.textContent = t.testSuccess;
-            testStatus.style.color = '#107c10';
+            statusText.textContent = t.testSuccess;
+            statusIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            status.className = 'status-toast status-success show';
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 2000);
         } else {
             const errData = await response.json();
+            status.classList.remove('show');
             testStatus.textContent = t.testError + (errData.error?.message || response.statusText);
-            testStatus.style.color = '#d13438';
+            testStatus.className = 'status-pill status-error';
+            testStatus.style.display = 'inline-block';
         }
     } catch (error) {
         testStatus.textContent = t.testError + error.message;
-        testStatus.style.color = '#d13438';
+        testStatus.className = 'status-pill status-error';
+        testStatus.style.display = 'inline-block';
     }
 });
 
 // 加载设置
 function loadOptions() {
-    chrome.storage.sync.get({
-        language: 'zh',
-        strategy: 'domain',
-        apiKey: '',
-        prompt: '',
-        debugMode: false
-    }, (items) => {
+    chrome.storage.sync.get(DEFAULT_SETTINGS, (items) => {
         document.getElementById('language').value = items.language;
         document.getElementById('strategy').value = items.strategy;
         // 如果已有 API Key，显示掩码占位符
@@ -135,10 +144,17 @@ document.getElementById('save').addEventListener('click', () => {
             document.getElementById('apiKey').placeholder = "••••••••••••••••";
         }
         const status = document.getElementById('status');
+        const statusText = document.getElementById('status-text');
+        const statusIcon = document.getElementById('status-icon');
         const t = TRANSLATIONS[language] || TRANSLATIONS.en;
-        status.textContent = t.status;
-        status.style.display = 'block';
-        setTimeout(() => { status.style.display = 'none'; }, 2000);
+        
+        statusText.textContent = t.status;
+        statusIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        status.className = 'status-toast status-success show';
+        
+        setTimeout(() => {
+            status.classList.remove('show');
+        }, 2000);
     });
 });
 
@@ -148,6 +164,20 @@ document.getElementById('reset').addEventListener('click', () => {
     const strategy = document.getElementById('strategy').value;
     const newPrompt = getPrompt(lang, strategy);
     document.getElementById('prompt').value = newPrompt;
+
+    // 添加 Toast 提示
+    const status = document.getElementById('status');
+    const statusText = document.getElementById('status-text');
+    const statusIcon = document.getElementById('status-icon');
+    const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+    
+    statusText.textContent = lang === 'zh' ? "已恢复默认 Prompt" : "Restored default prompt";
+    statusIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    status.className = 'status-toast status-success show';
+    
+    setTimeout(() => {
+        status.classList.remove('show');
+    }, 2000);
 });
 
 // 切换语言时预览

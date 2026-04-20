@@ -1,3 +1,17 @@
+export const API_CONFIG = {
+    URL: "https://api.deepseek.com/chat/completions",
+    MODEL: "deepseek-chat"
+};
+
+export const DEFAULT_SETTINGS = {
+    apiKey: '',
+    prompt: '',
+    language: 'zh',
+    strategy: 'domain',
+    debugMode: false,
+    crossWindow: false
+};
+
 export const STRATEGIES = [
     {
         id: 'domain',
@@ -33,9 +47,9 @@ Notes:
             en: 'By Topic/Content'
         },
         prompts: {
-            zh: `你是一个浏览器标签页管理助手。请深入分析以下提供的标签页列表（包含标题和解码后的URL），并根据标签页的【核心主题或内容分类】将它们划分为合适的小组。
+            zh: `你是一个浏览器标签页管理助手。请深入分析以下提供的标签页列表（包含标题和解码后的URL），并根据标签页的【核心主题或内容分组】将它们划分为合适的小组。
 
-分类逻辑指南：
+分组逻辑指南：
 1. 【标题与 URL 协同】：首先阅读标题。如果多个标签页标题相同（如都叫“首页”、“详情页”或“New Tab”），请务必利用 URL 路径的差异进行区分并归类。
 2. 【URL 路径解析】：对于标题含糊的情况，请深入解析 URL 路径关键词（如 /docs/, /vortex/, /project/, /blog/）来判断真实主题。
 3. 【内容归纳】：将具有相同业务属性或项目背景的标签页归为一类（例如：开发文档, 购物, 社交媒体, 工作项目）。
@@ -68,7 +82,7 @@ Output Requirements:
             en: 'Academic Priority'
         },
         prompts: {
-            zh: `你是一个学术科研的浏览器分类助手。请分析以下标签页列表，并按照以下逻辑进行分组：
+            zh: `你是一个学术科研的浏览器标签页分组助手。请分析以下标签页列表，并按照以下逻辑进行分组：
 1. 【学术相关】：将所有与学术研究、论文阅读（如 Arxiv, IEEE, Google Scholar）、科研工具、学术讨论相关的标签页，根据具体的【研究主题】（如：大语言模型， 计算机系统，计算机视觉等）分组。
 2. 【学术之外】：将所有与学术无关的标签页（如：娱乐, 社交, 新闻）统一归入一个名为“常规/日常”的分组中。
 
@@ -96,13 +110,27 @@ Notes:
     }
 ];
 
+export const SEARCH_SYSTEM_PROMPTS = {
+    zh: `你是一个标签页筛选助手。请根据用户的需求描述，从提供的标签页列表中筛选出匹配的标签页。
+返回格式必须是纯 JSON 数组，仅包含匹配的 tabId。
+例如：[1, 2, 3]
+如果没有匹配项，返回 []。不要包含任何解释文字。`,
+    en: `You are a tab filtering assistant. Filter the provided list of tabs based on the user's requirement.
+Return MUST be a pure JSON array of matched tabIds.
+Example: [1, 2, 3]
+Return [] if no matches. Do not include any explanation.`
+};
+
 export const TRANSLATIONS = {
     zh: {
         title: "PagePilot 设置",
+        sectionApiLang: "通用设置",
+        sectionStrategyPrompt: "分组策略",
         labelLang: "界面与分组语言 (Language)",
         labelStrategy: "分组策略 (Grouping Strategy)",
         labelApiKey: "DeepSeek API Key",
-        labelPrompt: "当前 Prompt 预览 (可自定义)",
+        hintPrompt: "自定义 AI 分组逻辑。(不必更改)",
+        labelPrompt: "自定义分组 Prompt (Custom Prompt)",
         save: "保存设置",
         reset: "恢复当前策略默认 Prompt",
         status: "设置已保存！",
@@ -110,15 +138,18 @@ export const TRANSLATIONS = {
         testing: "正在测试...",
         testSuccess: "连接成功！",
         testError: "连接失败: ",
-        labelDebug: "开启调试模式 (在控制台输出日志)",
+        labelDebug: "调试模式 (在控制台输出日志)",
         labelCrossWindow: "支持跨窗口整理 (Experimental)"
     },
     en: {
         title: "PagePilot Options",
+        sectionApiLang: "General Settings",
+        sectionStrategyPrompt: "Grouping Strategy",
         labelLang: "Interface & Grouping Language",
         labelStrategy: "Grouping Strategy",
         labelApiKey: "DeepSeek API Key",
-        labelPrompt: "Current Prompt Preview (Customizable)",
+        hintPrompt: "Custom AI grouping logic.(No need to modify)",
+        labelPrompt: "Custom Grouping Prompt (Custom Prompt)",
         save: "Save Settings",
         reset: "Reset to Default Prompt",
         status: "Settings saved!",
@@ -134,12 +165,12 @@ export const TRANSLATIONS = {
 export const POPUP_TRANSLATIONS = {
     zh: {
         appName: "PagePilot",
-        groupTitle: "自动分类",
+        groupTitle: "自动分组",
         extractTitle: "智能提取",
         btn: "一键智能分组",
         loading: "正在分析中...",
         success: "处理完成！",
-        options: "⚙️ 设置界面与提示词",
+        options: "⚙️ 设置",
         error: "出错了，请检查设置",
         extract: "智能提取",
         extractPlaceholder: "输入提取指令...",
@@ -147,9 +178,10 @@ export const POPUP_TRANSLATIONS = {
         noTabs: "未匹配到标签页",
         crossWindow: "跨窗口",
         extractHint: "例如：“Bilibili页面” 或 “xv6项目有关页面”",
+        groupHint: "分析页面内容并自动分组",
         apiKeyError: "请先配置 API Key",
         extractTooltip: "将匹配项移至新窗口",
-        optCurrent: "使用当前设置的提示词"
+        optCurrent: "使用当前设置的分组策略"
     },
     en: {
         appName: "PagePilot",
@@ -166,8 +198,9 @@ export const POPUP_TRANSLATIONS = {
         noTabs: "No matches",
         crossWindow: "Cross Window",
         extractHint: "e.g., 'Extract YouTube' or 'Find pages about sys'",
+        groupHint: "Analyze content and organizes tabs into groups",
         apiKeyError: "Please configure API Key",
         extractTooltip: "Move matches to new window",
-        optCurrent: "Use Saved Prompt"
+        optCurrent: "Use saved grouping strategy"
     }
 };
