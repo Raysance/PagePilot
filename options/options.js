@@ -1,4 +1,4 @@
-import { STRATEGIES, TRANSLATIONS, API_PROVIDERS, DEFAULT_SETTINGS } from './constants.js';
+import { STRATEGIES, TRANSLATIONS, API_PROVIDERS, DEFAULT_SETTINGS } from '../constants.js';
 
 function updateUI(lang, strategy = 'domain', providerId = 'deepseek') {
     const t = TRANSLATIONS[lang] || TRANSLATIONS.en;

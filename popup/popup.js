@@ -1,4 +1,4 @@
-import { POPUP_TRANSLATIONS, STRATEGIES, API_PROVIDERS, DEFAULT_SETTINGS, SEARCH_SYSTEM_PROMPTS } from './constants.js';
+import { POPUP_TRANSLATIONS, STRATEGIES, API_PROVIDERS, DEFAULT_SETTINGS, SEARCH_SYSTEM_PROMPTS } from '../constants.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 监听存储变化以实时更新语言

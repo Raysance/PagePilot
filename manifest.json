@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "PagePilot",
   "version": "1.0",
-  "description": "使用 DeepSeek API 智能整理和分组 Edge 标签页。",
+  "description": "使用 AI 智能分组与提取 Edge 标签页。",
   "permissions": [
     "tabs",
     "tabGroups",
@@ -12,18 +12,23 @@
     "https://api.deepseek.com/*"
   ],
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": "icons/icon.svg"
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
-  "options_page": "options.html",
+  "options_page": "options/options.html",
   "background": {
     "service_worker": "background.js",
     "type": "module"
   },
   "icons": {
-    "16": "icons/icon.svg",
-    "32": "icons/icon.svg",
-    "48": "icons/icon.svg",
-    "128": "icons/icon.svg"
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   }
 }
