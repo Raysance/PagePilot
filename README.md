@@ -1,44 +1,37 @@
-# PagePilot 🚀
+# PagePilot
 
-Are you drowning in a sea of dozens (or hundreds) of open tabs? **PagePilot** is here to rescue your browser workspace. It's a lightweight Edge extension that uses DeepSeek AI as its brain to help you tidy up the mess in seconds.
+PagePilot is a browser extension (Edge/Chrome) powered by DeepSeek AI, designed to optimize large-scale tab management through intelligent algorithms.
 
-## 🚀 What it actually does
+## Core Features
 
--   **Auto-Group Your Tabs**: Stop manually dragging tabs around. One click, and all your open pages are neatly categorized into groups with meaningful names.
--   **Find & Extract in Seconds**: Can't remember where that one article was? Just type what you're looking for (e.g., "all my shopping carts" or "GitHub repos") and let the extension pull them out for you.
+- **AI Tab Grouping**: Automatically categorizes and groups open tabs using AI.
+- **Natural Language Search**: Find and filter tabs by typing what they are about.
+- **Multi-Window Support**: Manage and clean up tabs across all open windows.
+- **Custom Prompts**: Adjust the AI's classification logic to your needs.
+- **Bilingual Support**: Full support for English and Chinese.
 
-## ✨ Why you'll love it (Core Features)
+## Installation Guide
 
--   **Pick Your Style**: Whether you prefer grouping by domain or by specific topics, there’s a strategy that fits how you work.
--   **Tidy All Windows**: Got three different browser windows open? You can clean them all up at once.
--   **Make it Yours**: You can even tweak the AI prompts yourself if you want it to categorize things in a very specific way.
--   **Lives in your language**: Full support for both English and Chinese.
+### 1. Extension Installation
+1. Download or clone this repository to your local machine.
+2. Navigate to `edge://extensions/` (or `chrome://extensions/`) in your browser.
+3. Enable "Developer mode".
+4. Click "Load unpacked" and select the project root directory.
 
-## 🛠️ Getting Started
+### 2. Configuration
+This extension requires a DeepSeek API key for AI-powered functionality:
+1. Open the extension popup and click the "Settings" icon.
+2. Enter a valid **DeepSeek API Key**.
+3. Click "Test Connection" to verify API availability.
+4. Save the configuration to begin.
 
-### 1. Install it
-1.  Download this repo to your computer.
-2.  Head over to `edge://extensions/` in your Edge browser.
-3.  Flip the switch for **"Developer mode"** (bottom left).
-4.  Click **"Load unpacked"** and pick this project folder.
+### 3. Usage
+- **One-Click Organize**: Click the "Organize" button to automatically create and assign tabs to groups based on page content.
+- **Smart Filtering**: Enter descriptive text in the search bar, and the AI will identify and filter relevant tabs accordingly.
 
-### 2. Set up the "Brain"
-You'll need a DeepSeek API key to make the magic happen:
-1.  Open the extension and click the **Settings** icon.
-2.  Paste your **DeepSeek API Key**.
-3.  Hit **"Test Connection"** to make sure everything is linked up.
-4.  Save and you're good to go!
-
-### 3. Clean up the mess
--   **The Big Clean**: Just click the extension icon and hit the "Organize" button. Watch your tabs fly into neat groups.
--   **The Precision Hunt**: Use the search bar in the popup to describe what you want to find. It's like having a personal assistant for your browser.
-
-
-## ⚙️ Advanced Settings
-In the Options page, you can:
--   Change the interface language.
--   Select your default grouping strategy.
--   **Prompt Customization**: Directly modify the AI system prompt to better match your classification needs.
--   Enable Debug Mode to view detailed categorization logs.
-
----
+## Advanced Configuration
+In the Options page, users can:
+- Toggle interface language.
+- Select default grouping strategies.
+- **Prompt Customization**: Directly modify system prompts to refine classification accuracy.
+- **Debug Mode**: Enable to view detailed categorization logs and API call technicalities.
