@@ -1,4 +1,95 @@
-import { API_PROVIDERS, DEFAULT_SETTINGS } from './constants.js';
+import { API_PROVIDERS, DEFAULT_SETTINGS, POPUP_TRANSLATIONS } from './constants.js';
+
+chrome.commands.onCommand.addListener((command) => {
+    if (command === "organize_tabs") {
+        handleShortcutOrganize();
+    }
+});
+
+async function handleShortcutOrganize() {
+    const settings = await chrome.storage.sync.get(DEFAULT_SETTINGS);
+    const lang = settings.language;
+    const t = POPUP_TRANSLATIONS[lang] || POPUP_TRANSLATIONS.en;
+    
+    // 显示加载中提示
+    await injectToast(t.loading, "loading");
+    
+    // 执行一键智能分组，使用默认配置
+    const result = await organizeTabsAction(null);
+    
+    // 更新结果提示
+    if (result.success) {
+        await injectToast(t.success, "success");
+    } else {
+        await injectToast(result.error ? `${t.error} (${result.error})` : t.error, "error");
+    }
+}
+
+async function injectToast(message, type) {
+    try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tabs.length === 0) return;
+        
+        const tab = tabs[0];
+        const url = tab.url;
+        // 无法在浏览器扩展页面或特殊页面注入脚本
+        if (!url || url.startsWith('chrome://') || url.startsWith('edge://') || url.startsWith('about:') || url.startsWith('chrome-extension://')) {
+            console.warn("Cannot inject toast into this page:", url);
+            return;
+        }
+
+        await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: (msg, type) => {
+                let toast = document.getElementById('pagepilot-toast');
+                if (toast && type === 'loading') {
+                    toast.remove();
+                    toast = null;
+                }
+                
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'pagepilot-toast';
+                    toast.style.position = 'fixed';
+                    toast.style.bottom = '20px';
+                    toast.style.right = '20px';
+                    toast.style.padding = '12px 20px';
+                    toast.style.borderRadius = '8px';
+                    toast.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                    toast.style.zIndex = '2147483647';
+                    toast.style.fontSize = '14px';
+                    toast.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+                    toast.style.transition = 'opacity 0.3s ease';
+                    toast.style.color = 'white';
+                    document.body.appendChild(toast);
+                }
+                
+                toast.textContent = msg;
+                toast.style.opacity = '1';
+                
+                if (type === 'error') {
+                    toast.style.background = '#ef4444'; // Red
+                } else if (type === 'success') {
+                    toast.style.background = '#10b981'; // Green
+                } else {
+                    toast.style.background = '#3b82f6'; // Blue
+                }
+                
+                if (type !== 'loading') {
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        setTimeout(() => {
+                            if (toast.parentNode) toast.parentNode.removeChild(toast);
+                        }, 300);
+                    }, 3000);
+                }
+            },
+            args: [message, type]
+        });
+    } catch (e) {
+        console.error("Failed to inject toast:", e);
+    }
+}
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "organizeTabs") {
@@ -12,6 +103,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     } else if (request.action === "ungroupAll") {
         ungroupAllTabs().then(sendResponse);
+        return true;
+    } else if (request.action === "injectToast") {
+        injectToast(request.message, request.type).then(sendResponse);
         return true;
     }
 });
@@ -105,14 +199,16 @@ async function organizeTabsAction(customPrompt) {
         const settings = await chrome.storage.sync.get(DEFAULT_SETTINGS);
 
         if (!settings.apiKey) {
-            return { success: false, error: settings.language === 'zh' ? "请先在设置中配置 API Key" : "Please configure API Key in options first" };
+            const t = POPUP_TRANSLATIONS[settings.language] || POPUP_TRANSLATIONS.en;
+            return { success: false, error: t.apiKeyError };
         }
 
         // 使用传递过来的自定义提示词，如果没有则使用存储中的
         let finalPrompt = customPrompt || settings.prompt;
         
         if (!finalPrompt) {
-            return { success: false, error: "Prompt is missing. Please save settings first." };
+            const t = POPUP_TRANSLATIONS[settings.language] || POPUP_TRANSLATIONS.en;
+            return { success: false, error: t.error }; // Reusing generic error
         }
 
         const queryInfo = settings.crossWindow 

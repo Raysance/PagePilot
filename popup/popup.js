@@ -104,18 +104,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     undoBtn.addEventListener('click', () => {
-        chrome.runtime.sendMessage({ action: "undo" }, (response) => {
-            chrome.storage.sync.get(DEFAULT_SETTINGS, (settings) => {
-                const t = POPUP_TRANSLATIONS[settings.language] || POPUP_TRANSLATIONS.en;
+        chrome.storage.sync.get(DEFAULT_SETTINGS, (settings) => {
+            const t = POPUP_TRANSLATIONS[settings.language] || POPUP_TRANSLATIONS.en;
+            chrome.runtime.sendMessage({ action: "undo" }, (response) => {
                 if (response && response.success) {
                     status.textContent = t.success;
                     status.className = 'success';
+                    chrome.runtime.sendMessage({ action: "injectToast", message: t.success, type: "success" });
                 } else if (response && response.error === "no_history") {
                     status.textContent = t.noUndo || "No undo history";
                     status.className = 'error';
+                    chrome.runtime.sendMessage({ action: "injectToast", message: t.noUndo || "No undo history", type: "error" });
                 } else {
                     status.textContent = t.error;
                     status.className = 'error';
+                    chrome.runtime.sendMessage({ action: "injectToast", message: t.error, type: "error" });
                 }
             });
         });
@@ -129,9 +132,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (response && response.success) {
                         status.textContent = t.success;
                         status.className = 'success';
+                        chrome.runtime.sendMessage({ action: "injectToast", message: t.success, type: "success" });
                     } else {
                         status.textContent = t.error;
                         status.className = 'error';
+                        chrome.runtime.sendMessage({ action: "injectToast", message: t.error, type: "error" });
                     }
                 });
             }
@@ -164,6 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.disabled = true;
         status.textContent = t.loading;
         status.className = 'loading';
+        chrome.runtime.sendMessage({ action: "injectToast", message: t.loading, type: "loading" });
 
         chrome.runtime.sendMessage({ 
             action: "organizeTabs",
@@ -173,10 +179,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (response && response.success) {
                 status.textContent = t.success;
                 status.className = 'success';
+                chrome.runtime.sendMessage({ action: "injectToast", message: t.success, type: "success" });
             } else {
                 console.error("Organize Error:", response?.error);
                 status.textContent = response?.error ? `${t.error} (${response.error})` : t.error;
                 status.className = 'error';
+                chrome.runtime.sendMessage({ action: "injectToast", message: response?.error ? `${t.error} (${response.error})` : t.error, type: "error" });
             }
         });
     });
@@ -196,12 +204,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!settings.apiKey) {
             status.textContent = t.apiKeyError;
             status.className = 'error';
+            chrome.runtime.sendMessage({ action: "injectToast", message: t.apiKeyError, type: "error" });
             return;
         }
 
         extractBtn.disabled = true;
         status.textContent = t.loading;
         status.className = 'loading';
+        chrome.runtime.sendMessage({ action: "injectToast", message: t.loading, type: "loading" });
 
         const queryInfo = crossWindow ? { windowType: 'normal' } : { currentWindow: true, windowType: 'normal' };
         
@@ -270,14 +280,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 status.textContent = `${t.extractSuccess}: ${validIds.length}`;
                 status.className = 'success';
+                chrome.runtime.sendMessage({ action: "injectToast", message: `${t.extractSuccess}: ${validIds.length}`, type: "success" });
             } else {
                 status.textContent = t.noTabs;
                 status.className = 'error';
+                chrome.runtime.sendMessage({ action: "injectToast", message: t.noTabs, type: "error" });
             }
         } catch (err) {
             console.error(err);
             status.textContent = `${t.error} (${err.message})`;
             status.className = 'error';
+            chrome.runtime.sendMessage({ action: "injectToast", message: `${t.error} (${err.message})`, type: "error" });
         } finally {
             extractBtn.disabled = false;
         }
