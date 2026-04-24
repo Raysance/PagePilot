@@ -4,7 +4,7 @@ export const API_PROVIDERS = [
         name: 'DeepSeek',
         url: 'https://api.deepseek.com/chat/completions',
         model: 'deepseek-chat',
-        description: '性价比之王，支持 JSON Mode',
+        description: '高性价比，深度思考能力强',
         supportJsonMode: true
     },
     {
@@ -12,15 +12,31 @@ export const API_PROVIDERS = [
         name: 'OpenAI (GPT-4o)',
         url: 'https://api.openai.com/v1/chat/completions',
         model: 'gpt-4o-mini',
-        description: '业界标杆，智能且快速',
+        description: '行业顶尖模型，理解精准且响应快速',
         supportJsonMode: true
+    },
+    {
+        id: 'gemini',
+        name: 'Google Gemini',
+        url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+        model: 'gemini-1.5-flash',
+        description: '超长上下文支持，多模态推理领先',
+        supportJsonMode: true
+    },
+    {
+        id: 'claude',
+        name: 'Anthropic Claude',
+        url: 'https://api.anthropic.com/v1/messages',
+        model: 'claude-3-5-sonnet-20240620',
+        description: '拟人化程度极高，代码与文案创作核心工具',
+        supportJsonMode: false
     },
     {
         id: 'groq',
         name: 'Groq (Llama 3)',
         url: 'https://api.groq.com/openai/v1/chat/completions',
         model: 'llama3-70b-8192',
-        description: '极速响应，兼容 OpenAI 格式',
+        description: '追求极致的推理速度，兼容 OpenAI 协议',
         supportJsonMode: false
     },
     {
@@ -28,7 +44,7 @@ export const API_PROVIDERS = [
         name: 'Custom (OpenAI Compatible)',
         url: '',
         model: '',
-        description: '自定义 OpenAI 兼容接口',
+        description: '连接任何兼容 OpenAI 格式的中转站或本地模型',
         supportJsonMode: true
     }
 ];
